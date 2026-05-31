@@ -1,0 +1,781 @@
+[
+  {
+    "disease_name": "graft versus host disease",
+    "disease_id": "MONDO_0013730",
+    "top_targets": [
+      {
+        "approved_name": "FKBP prolyl isomerase 1A",
+        "id": "FKBP prolyl isomerase 1A",
+        "score": 0.5399705506854445,
+        "open_target_rank": 1,
+        "uniprot_swissprot": "P62942",
+        "pathogen_hits": [
+          {
+            "pathogen_molecule": "BALF1_EBVB9",
+            "pathogen_id": "P0CK58",
+            "pathogen_taxid": "10377",
+            "pathogen_kingdom": "VIRUS"
+          },
+          {
+            "pathogen_molecule": "K9UT94_EBVG",
+            "pathogen_id": "K9UT94",
+            "pathogen_taxid": "10376",
+            "pathogen_kingdom": "VIRUS"
+          }
+        ],
+        "association_score": 0.5399705506854445,
+        "viral_molecule_hit_count": 2,
+        "viral_source_taxa_count": 2,
+        "supporting_interaction_count": 2,
+        "viral_informed_score": 0.5479705506854445,
+        "viral_informed_rank": 2,
+        "rank_gain": -1
+      },
+      {
+        "approved_name": "Janus kinase 1",
+        "id": "Janus kinase 1",
+        "score": 0.5372879669579735,
+        "open_target_rank": 2,
+        "uniprot_swissprot": "P23458",
+        "pathogen_hits": [
+          {
+            "pathogen_molecule": "B8PZP6_9MONO",
+            "pathogen_id": "B8PZP6",
+            "pathogen_taxid": "11234",
+            "pathogen_kingdom": "VIRUS"
+          },
+          {
+            "pathogen_molecule": "INTACT:EBI-6599589",
+            "pathogen_id": "EBI-6599589",
+            "pathogen_taxid": "11241",
+            "pathogen_kingdom": "VIRUS"
+          },
+          {
+            "pathogen_molecule": "Q5ZER6_PPRV",
+            "pathogen_id": "Q5ZER6",
+            "pathogen_taxid": "31604",
+            "pathogen_kingdom": "VIRUS"
+          },
+          {
+            "pathogen_molecule": "INTACT:EBI-6600906",
+            "pathogen_id": "EBI-6600906",
+            "pathogen_taxid": "11234",
+            "pathogen_kingdom": "VIRUS"
+          },
+          {
+            "pathogen_molecule": "INTACT:EBI-6600912",
+            "pathogen_id": "EBI-6600912",
+            "pathogen_taxid": "11233",
+            "pathogen_kingdom": "VIRUS"
+          },
+          {
+            "pathogen_molecule": "V_RINDR",
+            "pathogen_id": "Q03340",
+            "pathogen_taxid": "36409",
+            "pathogen_kingdom": "VIRUS"
+          },
+          {
+            "pathogen_molecule": "Q6TV27_9MONO",
+            "pathogen_id": "Q6TV27",
+            "pathogen_taxid": "11232",
+            "pathogen_kingdom": "VIRUS"
+          },
+          {
+            "pathogen_molecule": "C5E524_9INFA",
+            "pathogen_id": "C5E524",
+            "pathogen_taxid": "643960",
+            "pathogen_kingdom": "VIRUS"
+          },
+          {
+            "pathogen_molecule": "M2_I34A1",
+            "pathogen_id": "P06821",
+            "pathogen_taxid": "211044",
+            "pathogen_kingdom": "VIRUS"
+          },
+          {
+            "pathogen_molecule": "C5E526_9INFA",
+            "pathogen_id": "C5E526",
+            "pathogen_taxid": "643960",
+            "pathogen_kingdom": "VIRUS"
+          },
+          {
+            "pathogen_molecule": "Core protein p21(POLG_HCVJF)",
+            "pathogen_id": "Q99IB8-PRO_0000045592",
+            "pathogen_taxid": "356411",
+            "pathogen_kingdom": "VIRUS"
+          },
+          {
+            "pathogen_molecule": "VE6_HPV18",
+            "pathogen_id": "P06463",
+            "pathogen_taxid": "333761",
+            "pathogen_kingdom": "VIRUS"
+          },
+          {
+            "pathogen_molecule": "EAR_EBVB9",
+            "pathogen_id": "P03182",
+            "pathogen_taxid": "10377",
+            "pathogen_kingdom": "VIRUS"
+          },
+          {
+            "pathogen_molecule": "VE7_HPV16",
+            "pathogen_id": "P03129",
+            "pathogen_taxid": "333760",
+            "pathogen_kingdom": "VIRUS"
+          },
+          {
+            "pathogen_molecule": "BALF1_EBVB9",
+            "pathogen_id": "P0CK58",
+            "pathogen_taxid": "10377",
+            "pathogen_kingdom": "VIRUS"
+          },
+          {
+            "pathogen_molecule": "VE7_HPV6B",
+            "pathogen_id": "P06464",
+            "pathogen_taxid": "10600",
+            "pathogen_kingdom": "VIRUS"
+          },
+          {
+            "pathogen_molecule": "Q2MG95_EBVB9",
+            "pathogen_id": "Q2MG95",
+            "pathogen_taxid": "10377",
+            "pathogen_kingdom": "VIRUS"
+          },
+          {
+            "pathogen_molecule": "VE5B_HPV11",
+            "pathogen_id": "P69901",
+            "pathogen_taxid": "10580",
+            "pathogen_kingdom": "VIRUS"
+          },
+          {
+            "pathogen_molecule": "BDLF2_EBVB9",
+            "pathogen_id": "P03225",
+            "pathogen_taxid": "10377",
+            "pathogen_kingdom": "VIRUS"
+          },
+          {
+            "pathogen_molecule": "Q69117_EBVG",
+            "pathogen_id": "Q69117",
+            "pathogen_taxid": "10376",
+            "pathogen_kingdom": "VIRUS"
+          },
+          {
+            "pathogen_molecule": "BTRF1_EBVB9",
+            "pathogen_id": "P30119",
+            "pathogen_taxid": "10377",
+            "pathogen_kingdom": "VIRUS"
+          },
+          {
+            "pathogen_molecule": "VE6_HPV08",
+            "pathogen_id": "P06428",
+            "pathogen_taxid": "10579",
+            "pathogen_kingdom": "VIRUS"
+          },
+          {
+            "pathogen_molecule": "UL92_EBVB9",
+            "pathogen_id": "P0CK56",
+            "pathogen_taxid": "10377",
+            "pathogen_kingdom": "VIRUS"
+          },
+          {
+            "pathogen_molecule": "UL95_EBVB9",
+            "pathogen_id": "P03220",
+            "pathogen_taxid": "10377",
+            "pathogen_kingdom": "VIRUS"
+          },
+          {
+            "pathogen_molecule": "Q6QZ18_9HEPC",
+            "pathogen_id": "Q6QZ18",
+            "pathogen_taxid": "41856",
+            "pathogen_kingdom": "VIRUS"
+          },
+          {
+            "pathogen_molecule": "EAR_EBVA8",
+            "pathogen_id": "P0C6Z1",
+            "pathogen_taxid": "82830",
+            "pathogen_kingdom": "VIRUS"
+          },
+          {
+            "pathogen_molecule": "HEMA_I33A0",
+            "pathogen_id": "P03454",
+            "pathogen_taxid": "381518",
+            "pathogen_kingdom": "VIRUS"
+          },
+          {
+            "pathogen_molecule": "M1_I33A0",
+            "pathogen_id": "P05777",
+            "pathogen_taxid": "381518",
+            "pathogen_kingdom": "VIRUS"
+          },
+          {
+            "pathogen_molecule": "Q3KSR4_EBVG",
+            "pathogen_id": "Q3KSR4",
+            "pathogen_taxid": "10376",
+            "pathogen_kingdom": "VIRUS"
+          },
+          {
+            "pathogen_molecule": "VE6_HPV18",
+            "pathogen_id": "P06463",
+            "pathogen_taxid": "333761",
+            "pathogen_kingdom": "VIRUS"
+          },
+          {
+            "pathogen_molecule": "B9UPF3_HPV11",
+            "pathogen_id": "B9UPF3",
+            "pathogen_taxid": "10580",
+            "pathogen_kingdom": "VIRUS"
+          },
+          {
+            "pathogen_molecule": "PA_I33A0",
+            "pathogen_id": "P15659",
+            "pathogen_taxid": "381518",
+            "pathogen_kingdom": "VIRUS"
+          },
+          {
+            "pathogen_molecule": "NRAM_I33A0",
+            "pathogen_id": "P03470",
+            "pathogen_taxid": "381518",
+            "pathogen_kingdom": "VIRUS"
+          },
+          {
+            "pathogen_molecule": "LT_SV40",
+            "pathogen_id": "P03070",
+            "pathogen_taxid": "1891767",
+            "pathogen_kingdom": "VIRUS"
+          },
+          {
+            "pathogen_molecule": "BTRF1_EBVA8",
+            "pathogen_id": "Q1HVD3",
+            "pathogen_taxid": "82830",
+            "pathogen_kingdom": "VIRUS"
+          },
+          {
+            "pathogen_molecule": "Q69117_EBVG",
+            "pathogen_id": "Q69117",
+            "pathogen_taxid": "10376",
+            "pathogen_kingdom": "VIRUS"
+          },
+          {
+            "pathogen_molecule": "PB2_I33A0",
+            "pathogen_id": "P03427",
+            "pathogen_taxid": "381518",
+            "pathogen_kingdom": "VIRUS"
+          },
+          {
+            "pathogen_molecule": "UL92_EBVA8",
+            "pathogen_id": "P0CK57",
+            "pathogen_taxid": "82830",
+            "pathogen_kingdom": "VIRUS"
+          },
+          {
+            "pathogen_molecule": "Q6QZ18_9HEPC",
+            "pathogen_id": "Q6QZ18",
+            "pathogen_taxid": "41856",
+            "pathogen_kingdom": "VIRUS"
+          },
+          {
+            "pathogen_molecule": "K9UT94_EBVG",
+            "pathogen_id": "K9UT94",
+            "pathogen_taxid": "10376",
+            "pathogen_kingdom": "VIRUS"
+          },
+          {
+            "pathogen_molecule": "M2_I33A0",
+            "pathogen_id": "P05780",
+            "pathogen_taxid": "381518",
+            "pathogen_kingdom": "VIRUS"
+          },
+          {
+            "pathogen_molecule": "V_MEASE",
+            "pathogen_id": "Q9EMA9",
+            "pathogen_taxid": "11235",
+            "pathogen_kingdom": "VIRUS"
+          },
+          {
+            "pathogen_molecule": "G3CKS7_EBVG",
+            "pathogen_id": "G3CKS7",
+            "pathogen_taxid": "10376",
+            "pathogen_kingdom": "VIRUS"
+          },
+          {
+            "pathogen_molecule": "A0A0C7TUY8_EBVG",
+            "pathogen_id": "A0A0C7TUY8",
+            "pathogen_taxid": "10376",
+            "pathogen_kingdom": "VIRUS"
+          },
+          {
+            "pathogen_molecule": "VE7_HPV6B",
+            "pathogen_id": "P06464",
+            "pathogen_taxid": "10600",
+            "pathogen_kingdom": "VIRUS"
+          },
+          {
+            "pathogen_molecule": "NEC1_EBVA8",
+            "pathogen_id": "P0CK48",
+            "pathogen_taxid": "82830",
+            "pathogen_kingdom": "VIRUS"
+          },
+          {
+            "pathogen_molecule": "V_MEASE",
+            "pathogen_id": "Q9EMA9",
+            "pathogen_taxid": "11235",
+            "pathogen_kingdom": "VIRUS"
+          },
+          {
+            "pathogen_molecule": "NS1(POLG_DEN26)",
+            "pathogen_id": "P29990-PRO_0000037929",
+            "pathogen_taxid": "31634",
+            "pathogen_kingdom": "VIRUS"
+          },
+          {
+            "pathogen_molecule": "VE6_HPV08",
+            "pathogen_id": "P06428",
+            "pathogen_taxid": "10579",
+            "pathogen_kingdom": "VIRUS"
+          },
+          {
+            "pathogen_molecule": "VE7_HPV16",
+            "pathogen_id": "P03129",
+            "pathogen_taxid": "333760",
+            "pathogen_kingdom": "VIRUS"
+          }
+        ],
+        "association_score": 0.5372879669579735,
+        "viral_molecule_hit_count": 50,
+        "viral_source_taxa_count": 22,
+        "supporting_interaction_count": 50,
+        "viral_informed_score": 0.7372879669579735,
+        "viral_informed_rank": 1,
+        "rank_gain": 1
+      }
+    ]
+  },
+  {
+    "disease_name": "dermatomyositis",
+    "disease_id": "EFO_0000398",
+    "top_targets": [
+      {
+        "approved_name": "nuclear receptor subfamily 3 group C member 1",
+        "id": "nuclear receptor subfamily 3 group C member 1",
+        "score": 0.5340839544476923,
+        "open_target_rank": 1,
+        "uniprot_swissprot": "P04150",
+        "pathogen_hits": [
+          {
+            "pathogen_molecule": "A0A288CFT1_HV1H2",
+            "pathogen_id": "A0A288CFT1",
+            "pathogen_taxid": "11676",
+            "pathogen_kingdom": "VIRUS"
+          },
+          {
+            "pathogen_molecule": "A0A288CFT1_HV1H2",
+            "pathogen_id": "A0A288CFT1",
+            "pathogen_taxid": "11676",
+            "pathogen_kingdom": "VIRUS"
+          },
+          {
+            "pathogen_molecule": "A0A288CFT1_HV1H2",
+            "pathogen_id": "A0A288CFT1",
+            "pathogen_taxid": "11706",
+            "pathogen_kingdom": "VIRUS"
+          },
+          {
+            "pathogen_molecule": "Q98184_MCV1",
+            "pathogen_id": "Q98184",
+            "pathogen_taxid": "10280",
+            "pathogen_kingdom": "VIRUS"
+          },
+          {
+            "pathogen_molecule": "A0A288CFT1_HV1H2",
+            "pathogen_id": "A0A288CFT1",
+            "pathogen_taxid": "11706",
+            "pathogen_kingdom": "VIRUS"
+          },
+          {
+            "pathogen_molecule": "Q98184_MCV1",
+            "pathogen_id": "Q98184",
+            "pathogen_taxid": "10280",
+            "pathogen_kingdom": "VIRUS"
+          },
+          {
+            "pathogen_molecule": "A0A288CFT1_HV1H2",
+            "pathogen_id": "A0A288CFT1",
+            "pathogen_taxid": "11706",
+            "pathogen_kingdom": "VIRUS"
+          },
+          {
+            "pathogen_molecule": "Q98184_MCV1",
+            "pathogen_id": "Q98184",
+            "pathogen_taxid": "10280",
+            "pathogen_kingdom": "VIRUS"
+          }
+        ],
+        "association_score": 0.5340839544476923,
+        "viral_molecule_hit_count": 8,
+        "viral_source_taxa_count": 3,
+        "supporting_interaction_count": 8,
+        "viral_informed_score": 0.5660839544476923,
+        "viral_informed_rank": 1,
+        "rank_gain": 0
+      },
+      {
+        "approved_name": "Janus kinase 1",
+        "id": "Janus kinase 1",
+        "score": 0.34891052075541223,
+        "open_target_rank": 2,
+        "uniprot_swissprot": "P23458",
+        "pathogen_hits": [
+          {
+            "pathogen_molecule": "B8PZP6_9MONO",
+            "pathogen_id": "B8PZP6",
+            "pathogen_taxid": "11234",
+            "pathogen_kingdom": "VIRUS"
+          },
+          {
+            "pathogen_molecule": "INTACT:EBI-6599589",
+            "pathogen_id": "EBI-6599589",
+            "pathogen_taxid": "11241",
+            "pathogen_kingdom": "VIRUS"
+          },
+          {
+            "pathogen_molecule": "Q5ZER6_PPRV",
+            "pathogen_id": "Q5ZER6",
+            "pathogen_taxid": "31604",
+            "pathogen_kingdom": "VIRUS"
+          },
+          {
+            "pathogen_molecule": "INTACT:EBI-6600906",
+            "pathogen_id": "EBI-6600906",
+            "pathogen_taxid": "11234",
+            "pathogen_kingdom": "VIRUS"
+          },
+          {
+            "pathogen_molecule": "INTACT:EBI-6600912",
+            "pathogen_id": "EBI-6600912",
+            "pathogen_taxid": "11233",
+            "pathogen_kingdom": "VIRUS"
+          },
+          {
+            "pathogen_molecule": "V_RINDR",
+            "pathogen_id": "Q03340",
+            "pathogen_taxid": "36409",
+            "pathogen_kingdom": "VIRUS"
+          },
+          {
+            "pathogen_molecule": "Q6TV27_9MONO",
+            "pathogen_id": "Q6TV27",
+            "pathogen_taxid": "11232",
+            "pathogen_kingdom": "VIRUS"
+          },
+          {
+            "pathogen_molecule": "C5E524_9INFA",
+            "pathogen_id": "C5E524",
+            "pathogen_taxid": "643960",
+            "pathogen_kingdom": "VIRUS"
+          },
+          {
+            "pathogen_molecule": "M2_I34A1",
+            "pathogen_id": "P06821",
+            "pathogen_taxid": "211044",
+            "pathogen_kingdom": "VIRUS"
+          },
+          {
+            "pathogen_molecule": "C5E526_9INFA",
+            "pathogen_id": "C5E526",
+            "pathogen_taxid": "643960",
+            "pathogen_kingdom": "VIRUS"
+          },
+          {
+            "pathogen_molecule": "Core protein p21(POLG_HCVJF)",
+            "pathogen_id": "Q99IB8-PRO_0000045592",
+            "pathogen_taxid": "356411",
+            "pathogen_kingdom": "VIRUS"
+          },
+          {
+            "pathogen_molecule": "VE6_HPV18",
+            "pathogen_id": "P06463",
+            "pathogen_taxid": "333761",
+            "pathogen_kingdom": "VIRUS"
+          },
+          {
+            "pathogen_molecule": "EAR_EBVB9",
+            "pathogen_id": "P03182",
+            "pathogen_taxid": "10377",
+            "pathogen_kingdom": "VIRUS"
+          },
+          {
+            "pathogen_molecule": "VE7_HPV16",
+            "pathogen_id": "P03129",
+            "pathogen_taxid": "333760",
+            "pathogen_kingdom": "VIRUS"
+          },
+          {
+            "pathogen_molecule": "BALF1_EBVB9",
+            "pathogen_id": "P0CK58",
+            "pathogen_taxid": "10377",
+            "pathogen_kingdom": "VIRUS"
+          },
+          {
+            "pathogen_molecule": "VE7_HPV6B",
+            "pathogen_id": "P06464",
+            "pathogen_taxid": "10600",
+            "pathogen_kingdom": "VIRUS"
+          },
+          {
+            "pathogen_molecule": "Q2MG95_EBVB9",
+            "pathogen_id": "Q2MG95",
+            "pathogen_taxid": "10377",
+            "pathogen_kingdom": "VIRUS"
+          },
+          {
+            "pathogen_molecule": "VE5B_HPV11",
+            "pathogen_id": "P69901",
+            "pathogen_taxid": "10580",
+            "pathogen_kingdom": "VIRUS"
+          },
+          {
+            "pathogen_molecule": "BDLF2_EBVB9",
+            "pathogen_id": "P03225",
+            "pathogen_taxid": "10377",
+            "pathogen_kingdom": "VIRUS"
+          },
+          {
+            "pathogen_molecule": "Q69117_EBVG",
+            "pathogen_id": "Q69117",
+            "pathogen_taxid": "10376",
+            "pathogen_kingdom": "VIRUS"
+          },
+          {
+            "pathogen_molecule": "BTRF1_EBVB9",
+            "pathogen_id": "P30119",
+            "pathogen_taxid": "10377",
+            "pathogen_kingdom": "VIRUS"
+          },
+          {
+            "pathogen_molecule": "VE6_HPV08",
+            "pathogen_id": "P06428",
+            "pathogen_taxid": "10579",
+            "pathogen_kingdom": "VIRUS"
+          },
+          {
+            "pathogen_molecule": "UL92_EBVB9",
+            "pathogen_id": "P0CK56",
+            "pathogen_taxid": "10377",
+            "pathogen_kingdom": "VIRUS"
+          },
+          {
+            "pathogen_molecule": "UL95_EBVB9",
+            "pathogen_id": "P03220",
+            "pathogen_taxid": "10377",
+            "pathogen_kingdom": "VIRUS"
+          },
+          {
+            "pathogen_molecule": "Q6QZ18_9HEPC",
+            "pathogen_id": "Q6QZ18",
+            "pathogen_taxid": "41856",
+            "pathogen_kingdom": "VIRUS"
+          },
+          {
+            "pathogen_molecule": "EAR_EBVA8",
+            "pathogen_id": "P0C6Z1",
+            "pathogen_taxid": "82830",
+            "pathogen_kingdom": "VIRUS"
+          },
+          {
+            "pathogen_molecule": "HEMA_I33A0",
+            "pathogen_id": "P03454",
+            "pathogen_taxid": "381518",
+            "pathogen_kingdom": "VIRUS"
+          },
+          {
+            "pathogen_molecule": "M1_I33A0",
+            "pathogen_id": "P05777",
+            "pathogen_taxid": "381518",
+            "pathogen_kingdom": "VIRUS"
+          },
+          {
+            "pathogen_molecule": "Q3KSR4_EBVG",
+            "pathogen_id": "Q3KSR4",
+            "pathogen_taxid": "10376",
+            "pathogen_kingdom": "VIRUS"
+          },
+          {
+            "pathogen_molecule": "VE6_HPV18",
+            "pathogen_id": "P06463",
+            "pathogen_taxid": "333761",
+            "pathogen_kingdom": "VIRUS"
+          },
+          {
+            "pathogen_molecule": "B9UPF3_HPV11",
+            "pathogen_id": "B9UPF3",
+            "pathogen_taxid": "10580",
+            "pathogen_kingdom": "VIRUS"
+          },
+          {
+            "pathogen_molecule": "PA_I33A0",
+            "pathogen_id": "P15659",
+            "pathogen_taxid": "381518",
+            "pathogen_kingdom": "VIRUS"
+          },
+          {
+            "pathogen_molecule": "NRAM_I33A0",
+            "pathogen_id": "P03470",
+            "pathogen_taxid": "381518",
+            "pathogen_kingdom": "VIRUS"
+          },
+          {
+            "pathogen_molecule": "LT_SV40",
+            "pathogen_id": "P03070",
+            "pathogen_taxid": "1891767",
+            "pathogen_kingdom": "VIRUS"
+          },
+          {
+            "pathogen_molecule": "BTRF1_EBVA8",
+            "pathogen_id": "Q1HVD3",
+            "pathogen_taxid": "82830",
+            "pathogen_kingdom": "VIRUS"
+          },
+          {
+            "pathogen_molecule": "Q69117_EBVG",
+            "pathogen_id": "Q69117",
+            "pathogen_taxid": "10376",
+            "pathogen_kingdom": "VIRUS"
+          },
+          {
+            "pathogen_molecule": "PB2_I33A0",
+            "pathogen_id": "P03427",
+            "pathogen_taxid": "381518",
+            "pathogen_kingdom": "VIRUS"
+          },
+          {
+            "pathogen_molecule": "UL92_EBVA8",
+            "pathogen_id": "P0CK57",
+            "pathogen_taxid": "82830",
+            "pathogen_kingdom": "VIRUS"
+          },
+          {
+            "pathogen_molecule": "Q6QZ18_9HEPC",
+            "pathogen_id": "Q6QZ18",
+            "pathogen_taxid": "41856",
+            "pathogen_kingdom": "VIRUS"
+          },
+          {
+            "pathogen_molecule": "K9UT94_EBVG",
+            "pathogen_id": "K9UT94",
+            "pathogen_taxid": "10376",
+            "pathogen_kingdom": "VIRUS"
+          },
+          {
+            "pathogen_molecule": "M2_I33A0",
+            "pathogen_id": "P05780",
+            "pathogen_taxid": "381518",
+            "pathogen_kingdom": "VIRUS"
+          },
+          {
+            "pathogen_molecule": "V_MEASE",
+            "pathogen_id": "Q9EMA9",
+            "pathogen_taxid": "11235",
+            "pathogen_kingdom": "VIRUS"
+          },
+          {
+            "pathogen_molecule": "G3CKS7_EBVG",
+            "pathogen_id": "G3CKS7",
+            "pathogen_taxid": "10376",
+            "pathogen_kingdom": "VIRUS"
+          },
+          {
+            "pathogen_molecule": "A0A0C7TUY8_EBVG",
+            "pathogen_id": "A0A0C7TUY8",
+            "pathogen_taxid": "10376",
+            "pathogen_kingdom": "VIRUS"
+          },
+          {
+            "pathogen_molecule": "VE7_HPV6B",
+            "pathogen_id": "P06464",
+            "pathogen_taxid": "10600",
+            "pathogen_kingdom": "VIRUS"
+          },
+          {
+            "pathogen_molecule": "NEC1_EBVA8",
+            "pathogen_id": "P0CK48",
+            "pathogen_taxid": "82830",
+            "pathogen_kingdom": "VIRUS"
+          },
+          {
+            "pathogen_molecule": "V_MEASE",
+            "pathogen_id": "Q9EMA9",
+            "pathogen_taxid": "11235",
+            "pathogen_kingdom": "VIRUS"
+          },
+          {
+            "pathogen_molecule": "NS1(POLG_DEN26)",
+            "pathogen_id": "P29990-PRO_0000037929",
+            "pathogen_taxid": "31634",
+            "pathogen_kingdom": "VIRUS"
+          },
+          {
+            "pathogen_molecule": "VE6_HPV08",
+            "pathogen_id": "P06428",
+            "pathogen_taxid": "10579",
+            "pathogen_kingdom": "VIRUS"
+          },
+          {
+            "pathogen_molecule": "VE7_HPV16",
+            "pathogen_id": "P03129",
+            "pathogen_taxid": "333760",
+            "pathogen_kingdom": "VIRUS"
+          }
+        ],
+        "association_score": 0.34891052075541223,
+        "viral_molecule_hit_count": 50,
+        "viral_source_taxa_count": 22,
+        "supporting_interaction_count": 50,
+        "viral_informed_score": 0.5489105207554122,
+        "viral_informed_rank": 2,
+        "rank_gain": 0
+      }
+    ]
+  },
+  {
+    "disease_name": "adult-onset Still's disease",
+    "disease_id": "EFO_0007135",
+    "top_targets": [
+      {
+        "approved_name": "interleukin 1 beta",
+        "id": "interleukin 1 beta",
+        "score": 0.35566045689473724,
+        "open_target_rank": 1,
+        "uniprot_swissprot": "P01584",
+        "pathogen_hits": [
+          {
+            "pathogen_molecule": "Q72874_9HIV1",
+            "pathogen_id": "Q72874",
+            "pathogen_taxid": "11676",
+            "pathogen_kingdom": "VIRUS"
+          }
+        ],
+        "association_score": 0.35566045689473724,
+        "viral_molecule_hit_count": 1,
+        "viral_source_taxa_count": 1,
+        "supporting_interaction_count": 1,
+        "viral_informed_score": 0.5556604568947372,
+        "viral_informed_rank": 1,
+        "rank_gain": 0
+      },
+      {
+        "approved_name": "interleukin 1 receptor type 1",
+        "id": "interleukin 1 receptor type 1",
+        "score": 0.3340643085907448,
+        "open_target_rank": 2,
+        "uniprot_swissprot": "P14778",
+        "pathogen_hits": [],
+        "association_score": 0.3340643085907448,
+        "viral_molecule_hit_count": 0,
+        "viral_source_taxa_count": 0,
+        "supporting_interaction_count": 0,
+        "viral_informed_score": 0.3340643085907448,
+        "viral_informed_rank": 2,
+        "rank_gain": 0
+      }
+    ]
+  }
+]
