@@ -1,0 +1,62 @@
+[
+  {
+    "disease_name": "graft versus host disease",
+    "disease_id": "MONDO_0013730",
+    "top_targets": [
+      {
+        "approved_name": "FKBP prolyl isomerase 1A",
+        "id": "ENSG00000088832",
+        "score": 0.5399705506854445,
+        "open_target_rank": 1,
+        "uniprot_swissprot": "P62942"
+      },
+      {
+        "approved_name": "Janus kinase 1",
+        "id": "ENSG00000162434",
+        "score": 0.5372879669579735,
+        "open_target_rank": 2,
+        "uniprot_swissprot": "P23458"
+      }
+    ]
+  },
+  {
+    "disease_name": "dermatomyositis",
+    "disease_id": "EFO_0000398",
+    "top_targets": [
+      {
+        "approved_name": "nuclear receptor subfamily 3 group C member 1",
+        "id": "ENSG00000113580",
+        "score": 0.5340839544476923,
+        "open_target_rank": 1,
+        "uniprot_swissprot": "P04150"
+      },
+      {
+        "approved_name": "Janus kinase 1",
+        "id": "ENSG00000162434",
+        "score": 0.34891052075541223,
+        "open_target_rank": 2,
+        "uniprot_swissprot": "P23458"
+      }
+    ]
+  },
+  {
+    "disease_name": "adult-onset Still's disease",
+    "disease_id": "EFO_0007135",
+    "top_targets": [
+      {
+        "approved_name": "interleukin 1 beta",
+        "id": "ENSG00000125538",
+        "score": 0.35566045689473724,
+        "open_target_rank": 1,
+        "uniprot_swissprot": "P01584"
+      },
+      {
+        "approved_name": "interleukin 1 receptor type 1",
+        "id": "ENSG00000115594",
+        "score": 0.3340643085907448,
+        "open_target_rank": 2,
+        "uniprot_swissprot": "P14778"
+      }
+    ]
+  }
+]
