@@ -8,5 +8,4 @@
 **/tsconfig.tsbuildinfo
 
 # HPIDB source files exceed GitHub's normal file-size limit.
-python/data/inputs/hpidb2.mitab/
-
+disease-target-virus-pipeline/data/inputs/hpidb2.mitab/

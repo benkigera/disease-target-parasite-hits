@@ -8,7 +8,7 @@
     "atlas:dev": "bun --cwd parasite-target-atlas dev",
     "atlas:build": "bun --cwd parasite-target-atlas build",
     "atlas:typecheck": "bun --cwd parasite-target-atlas typecheck",
-    "pipeline:targets": "python3 python/load_disease_targets.py",
-    "pipeline:viruses": "python3 python/load_pathogen_hits.py"
+    "pipeline:targets": "python3 disease-target-virus-pipeline/load_disease_targets.py",
+    "pipeline:viruses": "python3 disease-target-virus-pipeline/load_pathogen_hits.py"
   }
 }
