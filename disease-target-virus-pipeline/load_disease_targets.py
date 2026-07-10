@@ -99,6 +99,7 @@ def fetch_top_targets(disease_id):
         all_targets.append(
             {
                 "approved_name": row["target"]["approvedName"],
+                "approved_symbol": row["target"]["approvedSymbol"],
                 "id": row["target"]["id"],
                 "score": row["score"],
                 "open_target_rank": index,

@@ -25,6 +25,7 @@ type PipelineDiseaseTargetMap = {
   disease_id: string;
   top_targets: {
     approved_name: string;
+    approved_symbol?: string;
     id: string;
     score: number;
     open_target_rank: number;
@@ -74,7 +75,7 @@ const indications = staticIndications.map((indication): EnhancedIndication => {
 
     return {
       targetId: target.id,
-      symbol: staticTarget?.symbol ?? target.id,
+      symbol: target.approved_symbol ?? staticTarget?.symbol ?? target.id,
       approvedName: target.approved_name,
       openTargetsRank: target.open_target_rank,
       associationScore: target.association_score,
