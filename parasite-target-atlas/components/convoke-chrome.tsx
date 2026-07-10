@@ -41,7 +41,7 @@ export function ConvokeChrome() {
         </nav>
       </div>
       <div className="border-t border-white/10 bg-[#272727] px-5 py-2 text-[13px] text-white/80">
-        Unmet needs index
+        Unmet Needs Index
       </div>
     </header>
   );
