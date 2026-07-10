@@ -50,6 +50,9 @@ def main():
 
 def collect_pathogen_hits_by_targets(target_uniprot_ids):
     hits = {}
+    candidate_rows = []
+    evidence_by_pair = {}
+
     # break into lines (one interaction row ...)
     #
     for line in (
@@ -62,8 +65,30 @@ def collect_pathogen_hits_by_targets(target_uniprot_ids):
         results = fetch_hits_for_a_single_target(columns, target_uniprot_ids)
 
         if results:
-            host_id, pathon_hits = results
-            hits.setdefault(host_id, []).append(pathon_hits)
+            host_id, pathogen_id, pathogen_hit = results
+            candidate_rows.append((host_id, pathogen_id, pathogen_hit))
+            pair_key = (host_id, pathogen_id)
+            pair_evidence = evidence_by_pair.setdefault(
+                pair_key,
+                {"publication_ids": set(), "detection_methods": set()},
+            )
+            pair_evidence["publication_ids"].update(
+                pathogen_hit["publication_ids"]
+            )
+            pair_evidence["detection_methods"].add(
+                pathogen_hit["detection_method"]
+            )
+
+    for host_id, pathogen_id, pathogen_hit in candidate_rows:
+        pair_evidence = evidence_by_pair[(host_id, pathogen_id)]
+        evidence_tier = classify_evidence_tier(pathogen_hit, pair_evidence)
+        pathogen_hit["evidence_tier"] = evidence_tier
+        pathogen_hit["counted_for_viral_rank"] = evidence_tier in {"A", "B"}
+
+        # Rank only with the most defensible direct-binding/direct-interaction
+        # evidence. Lower-tier rows are excluded from the atlas counts for now.
+        if pathogen_hit["counted_for_viral_rank"]:
+            hits.setdefault(host_id, []).append(pathogen_hit)
 
     return hits
 
@@ -112,9 +137,64 @@ def fetch_hits_for_a_single_target(columns, target_uniprot_ids):
         "pathogen_id": pathogen_id,
         "pathogen_taxid": pathogen_taxid,
         "pathogen_kingdom": pathogen_kingdom,
+        "detection_method": columns[6],
+        "interaction_type": columns[11],
+        "source_database": columns[23],
+        "confidence": columns[14],
+        "publication_ids": extract_publication_ids(columns[8]),
     }
 
-    return host_id, pathogen_hit
+    return host_id, pathogen_id, pathogen_hit
+
+
+def extract_publication_ids(publication_column):
+    return [
+        entry.split(":", 1)[1]
+        for entry in publication_column.split("|")
+        if entry.startswith("pubmed:")
+    ]
+
+
+def classify_evidence_tier(pathogen_hit, pair_evidence):
+    detection_method = pathogen_hit["detection_method"].lower()
+    interaction_type = pathogen_hit["interaction_type"].lower()
+
+    is_direct_interaction = "direct interaction" in interaction_type
+    is_high_throughput_like = any(
+        term in detection_method
+        for term in (
+            "array",
+            "pooling",
+            "interactome parallel affinity capture",
+        )
+    )
+    is_quantitative_or_structural = any(
+        term in detection_method
+        for term in (
+            "x-ray crystallography",
+            "x ray scattering",
+            "nuclear magnetic resonance",
+            "surface plasmon resonance",
+            "isothermal titration calorimetry",
+            "light scattering",
+            "hydrogen/deuterium exchange",
+        )
+    )
+    is_replicated = (
+        len(pair_evidence["publication_ids"]) >= 2
+        or len(pair_evidence["detection_methods"]) >= 2
+    )
+
+    if is_direct_interaction and is_quantitative_or_structural:
+        return "A"
+
+    if is_direct_interaction and is_replicated and not is_high_throughput_like:
+        return "B"
+
+    if is_direct_interaction and not is_high_throughput_like:
+        return "C"
+
+    return "D"
 
 
 def add_viral_informed_target_rank(diseases):
