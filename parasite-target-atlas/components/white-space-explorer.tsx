@@ -49,6 +49,12 @@ type PipelineDiseaseTargetMap = {
 
 const pipelineDiseaseMap = diseaseTargetPathogenMap as PipelineDiseaseTargetMap[];
 
+const staticTargetsById = new Map(
+  staticIndications.flatMap((indication) =>
+    indication.targetExplorer?.topTargets.map((target) => [target.targetId, target]) ?? []
+  )
+);
+
 const indications = staticIndications.map((indication): EnhancedIndication => {
   const pipelineDisease = pipelineDiseaseMap.find(
     (disease) =>
@@ -64,10 +70,11 @@ const indications = staticIndications.map((indication): EnhancedIndication => {
 
   const topTargets = pipelineDisease.top_targets.map((target) => {
     const oldTarget = oldTargetsById.get(target.id);
+    const staticTarget = oldTarget ?? staticTargetsById.get(target.id);
 
     return {
       targetId: target.id,
-      symbol: oldTarget?.symbol ?? target.id,
+      symbol: staticTarget?.symbol ?? target.id,
       approvedName: target.approved_name,
       openTargetsRank: target.open_target_rank,
       associationScore: target.association_score,
