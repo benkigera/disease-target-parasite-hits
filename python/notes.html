@@ -1,0 +1,1142 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <meta name="color-scheme" content="light" />
+        <meta name="theme-color" content="#f8f7f4" />
+        <title>Disease Target Mapping — Technical Notes</title>
+        <style>
+            :root {
+                --bg: #f8f7f4;
+                --surface: #ffffff;
+                --ink: #111310;
+                --ink-2: #374039;
+                --muted: #6b7a6d;
+                --line: #d8dbd8;
+                --green: #145c38;
+                --green-bg: #edf7f1;
+                --gold: #8a5c0e;
+                --gold-bg: #fef9ed;
+                --blue: #1a4f8a;
+                --blue-bg: #eef4fd;
+                --code-bg: #0d1117;
+                --code-text: #e0ecd6;
+                --code-dim: #1e2d1f;
+                --mono:
+                    "SFMono-Regular", "Cascadia Code", Consolas,
+                    "Liberation Mono", Menlo, monospace;
+                --spine-width: 48px;
+                --spine-gap: 24px;
+            }
+
+            * {
+                box-sizing: border-box;
+                margin: 0;
+                padding: 0;
+            }
+
+            .skip-link {
+                position: absolute;
+                top: -100%;
+                left: 16px;
+                padding: 6px 14px;
+                background: var(--gold-bg);
+                border: 1px solid var(--gold);
+                color: var(--ink);
+                font-weight: 700;
+                text-decoration: none;
+                z-index: 100;
+            }
+            .skip-link:focus {
+                top: 12px;
+            }
+
+            body {
+                background: var(--bg);
+                color: var(--ink);
+                font-family:
+                    ui-sans-serif,
+                    system-ui,
+                    -apple-system,
+                    "Segoe UI",
+                    sans-serif;
+                font-size: 16px;
+                line-height: 1.7;
+                touch-action: manipulation;
+                -webkit-tap-highlight-color: transparent;
+            }
+
+            .page {
+                width: min(780px, calc(100% - 32px));
+                margin: 0 auto;
+                padding: 64px 0 96px;
+            }
+
+            .page-header {
+                margin-bottom: 56px;
+            }
+
+            .page-label {
+                display: inline-block;
+                margin-bottom: 16px;
+                font-family: var(--mono);
+                font-size: 11px;
+                font-weight: 700;
+                letter-spacing: 0.12em;
+                text-transform: uppercase;
+                color: var(--muted);
+            }
+
+            .page-label::before {
+                content: "# ";
+                color: var(--green);
+            }
+
+            h1 {
+                font-size: clamp(28px, 5vw, 42px);
+                line-height: 1.1;
+                letter-spacing: -0.025em;
+                font-weight: 800;
+                text-wrap: balance;
+                margin-bottom: 16px;
+                color: var(--ink);
+            }
+
+            .page-desc {
+                font-size: 17px;
+                color: var(--muted);
+                line-height: 1.75;
+                text-wrap: pretty;
+                max-width: 640px;
+            }
+
+            .pipeline {
+                margin: 40px 0 56px;
+                display: flex;
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 0;
+            }
+
+            .pipeline-chip {
+                display: inline-flex;
+                align-items: center;
+                gap: 10px;
+                padding: 8px 14px;
+                border: 1.5px solid var(--ink);
+                background: var(--surface);
+                font-family: var(--mono);
+                font-size: 13px;
+                font-weight: 600;
+                color: var(--ink-2);
+            }
+
+            .pipeline-chip .chip-label {
+                font-size: 10px;
+                font-weight: 700;
+                letter-spacing: 0.1em;
+                text-transform: uppercase;
+                color: var(--muted);
+                min-width: 48px;
+            }
+
+            .pipeline-arrow {
+                display: flex;
+                align-items: center;
+                padding: 4px 0 4px 14px;
+                font-family: var(--mono);
+                font-size: 12px;
+                color: var(--muted);
+                user-select: none;
+            }
+
+            .pipeline-arrow::before {
+                content: "";
+                display: block;
+                width: 1.5px;
+                height: 20px;
+                background: var(--line);
+                margin-right: 0;
+            }
+
+            .pipeline-note {
+                margin-top: 20px;
+                padding: 14px 18px;
+                border-left: 3px solid var(--green);
+                background: var(--green-bg);
+                font-size: 14px;
+                color: var(--green);
+                line-height: 1.6;
+            }
+
+            .thread {
+                display: flex;
+                flex-direction: column;
+            }
+
+            .thread-step {
+                display: grid;
+                grid-template-columns: var(--spine-width) 1fr;
+                gap: 0 var(--spine-gap);
+                min-height: 0;
+            }
+
+            .thread-spine {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                flex-shrink: 0;
+            }
+
+            .step-badge {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                width: var(--spine-width);
+                height: var(--spine-width);
+                flex-shrink: 0;
+                background: var(--ink);
+                color: #e8f0e4;
+                font-family: var(--mono);
+                font-size: 12px;
+                font-weight: 700;
+                letter-spacing: 0.04em;
+                position: relative;
+                z-index: 1;
+            }
+
+            .spine-line {
+                flex: 1;
+                width: 1.5px;
+                background: var(--line);
+                min-height: 32px;
+            }
+
+            .thread-step:last-child .spine-line {
+                display: none;
+            }
+
+            .step-body {
+                padding-bottom: 48px;
+                padding-top: 10px;
+                min-width: 0;
+            }
+
+            h2 {
+                font-size: 19px;
+                font-weight: 700;
+                line-height: 1.25;
+                letter-spacing: -0.015em;
+                text-wrap: balance;
+                margin-bottom: 12px;
+                color: var(--ink);
+            }
+
+            h3 {
+                font-size: 15px;
+                font-weight: 700;
+                margin-bottom: 8px;
+                color: var(--ink-2);
+            }
+
+            p {
+                font-size: 15.5px;
+                line-height: 1.72;
+                color: var(--ink-2);
+                text-wrap: pretty;
+                margin-bottom: 12px;
+            }
+
+            p:last-child {
+                margin-bottom: 0;
+            }
+
+            a {
+                color: var(--blue);
+                font-weight: 600;
+                text-underline-offset: 3px;
+                text-decoration-thickness: 1px;
+                transition: color 120ms ease;
+            }
+
+            a:hover {
+                color: var(--ink);
+            }
+
+            a:focus-visible {
+                outline: 2px solid var(--blue);
+                outline-offset: 3px;
+                border-radius: 2px;
+            }
+
+            code {
+                font-family: var(--mono);
+                font-size: 0.875em;
+                padding: 1px 5px;
+                background: rgba(17, 19, 16, 0.07);
+                border-radius: 3px;
+                color: var(--ink);
+            }
+
+            pre {
+                margin: 16px 0;
+                border-radius: 0;
+                overflow-x: auto;
+                background: var(--code-bg);
+                border-left: 3px solid #2a4a2e;
+                background-image: linear-gradient(
+                    var(--code-dim) 1px,
+                    transparent 1px
+                );
+                background-size: 100% calc(1em * 1.75);
+                background-position: 0 20px;
+            }
+
+            pre code {
+                display: block;
+                padding: 20px 22px;
+                font-size: 13.5px;
+                line-height: 1.75;
+                color: var(--code-text);
+                background: none;
+                white-space: pre;
+                overflow-x: auto;
+                border-radius: 0;
+            }
+
+            ul,
+            ol {
+                padding-left: 20px;
+                margin: 10px 0;
+            }
+
+            li {
+                font-size: 15px;
+                line-height: 1.7;
+                color: var(--ink-2);
+                margin-bottom: 6px;
+            }
+
+            li code {
+                font-size: 0.875em;
+            }
+
+            .takeaway {
+                margin-top: 16px;
+                padding: 12px 16px;
+                border-left: 3px solid var(--gold);
+                background: var(--gold-bg);
+                font-size: 14px;
+                line-height: 1.6;
+                color: var(--gold);
+            }
+
+            .takeaway strong {
+                color: var(--gold);
+                font-weight: 700;
+            }
+
+            .col-list {
+                list-style: none;
+                padding: 0;
+                margin: 14px 0;
+                border: 1px solid var(--line);
+                background: var(--surface);
+            }
+
+            .col-list li {
+                display: flex;
+                align-items: baseline;
+                gap: 12px;
+                padding: 5px 14px;
+                font-family: var(--mono);
+                font-size: 12.5px;
+                color: var(--muted);
+                border-bottom: 1px solid var(--line);
+                margin: 0;
+                line-height: 1.5;
+            }
+
+            .col-list li:last-child {
+                border-bottom: none;
+            }
+
+            .col-list .col-n {
+                min-width: 24px;
+                font-size: 11px;
+                font-weight: 700;
+                color: var(--line);
+                flex-shrink: 0;
+            }
+
+            .col-list li.used {
+                background: #fef9c3;
+                color: var(--ink);
+                font-weight: 700;
+            }
+
+            .col-list li.used .col-n {
+                color: #a16207;
+            }
+
+            .col-eg {
+                margin-left: auto;
+                padding-left: 16px;
+                font-family: var(--mono);
+                font-size: 11px;
+                color: #b5bfb5;
+                white-space: nowrap;
+                flex-shrink: 0;
+                max-width: 280px;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
+
+            .col-list li.used .col-eg {
+                color: #a16207;
+            }
+
+            .section-label {
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                margin: 56px 0 32px;
+                font-family: var(--mono);
+                font-size: 11px;
+                font-weight: 700;
+                letter-spacing: 0.1em;
+                text-transform: uppercase;
+                color: var(--muted);
+            }
+
+            .section-label::before,
+            .section-label::after {
+                content: "";
+                flex: 1;
+                height: 1px;
+                background: var(--line);
+            }
+
+            .info-grid {
+                display: grid;
+                grid-template-columns: repeat(3, 1fr);
+                gap: 16px;
+                margin-top: 32px;
+            }
+
+            .info-block {
+                padding: 18px;
+                border: 1px solid var(--line);
+                background: var(--surface);
+            }
+
+            .info-block h3 {
+                font-family: var(--mono);
+                font-size: 11px;
+                font-weight: 700;
+                letter-spacing: 0.1em;
+                text-transform: uppercase;
+                color: var(--muted);
+                margin-bottom: 14px;
+            }
+
+            .info-block ul {
+                padding-left: 14px;
+                list-style: none;
+            }
+
+            .info-block li {
+                font-size: 13px;
+                color: var(--ink-2);
+                padding: 5px 0;
+                border-bottom: 1px solid var(--bg);
+                margin: 0;
+            }
+
+            .info-block li:last-child {
+                border-bottom: none;
+            }
+
+            .info-block li strong {
+                display: block;
+                font-size: 12px;
+                color: var(--ink);
+                font-family: var(--mono);
+                margin-bottom: 2px;
+            }
+
+            .page-footer {
+                margin-top: 48px;
+                padding-top: 24px;
+                border-top: 1px solid var(--line);
+                font-size: 13px;
+                color: var(--muted);
+            }
+
+            @media (prefers-reduced-motion: reduce) {
+                *,
+                ::before,
+                ::after {
+                    transition-duration: 0.01ms !important;
+                    animation-duration: 0.01ms !important;
+                }
+            }
+
+            @media (max-width: 600px) {
+                .page {
+                    padding: 32px 0 64px;
+                }
+
+                :root {
+                    --spine-width: 36px;
+                    --spine-gap: 16px;
+                }
+
+                .step-badge {
+                    font-size: 10px;
+                }
+
+                h1 {
+                    font-size: 26px;
+                }
+
+                .info-grid {
+                    grid-template-columns: 1fr;
+                }
+
+                pre code {
+                    font-size: 12px;
+                    padding: 16px;
+                }
+            }
+        </style>
+    </head>
+    <body>
+        <a href="#main" class="skip-link">Skip to content</a>
+
+        <div class="page" id="main">
+            <header class="page-header">
+                <span class="page-label">technical notes</span>
+                <h1>Disease → Target → Pathogen-Hit Map</h1>
+                <p class="page-desc">
+                    Given a list of diseases our goal is to find their top 100
+                    associated targets from the Open Targets API, map each target
+                    to a UniProt Swiss-Prot ID, then check whether those host
+                    proteins are interacting with any pathogens in HPIDB.
+                </p>
+
+                <div class="pipeline">
+                    <div class="pipeline-chip">
+                        <span class="chip-label">input</span>
+                        disease ID list
+                    </div>
+                    <div class="pipeline-arrow"></div>
+                    <div class="pipeline-chip">
+                        <span class="chip-label">step 1–4</span>
+                        disease → target map
+                    </div>
+                    <div class="pipeline-arrow"></div>
+                    <div class="pipeline-chip">
+                        <span class="chip-label">step 5–6</span>
+                        target → UniProt Swiss-Prot ID
+                    </div>
+                    <div class="pipeline-arrow"></div>
+                    <div class="pipeline-chip">
+                        <span class="chip-label">step 7–11</span>
+                        disease → target → pathogen-hit map
+                    </div>
+                </div>
+
+                <div class="pipeline-note">
+                    Open Targets scores and ranks targets through their genetic
+                    association data. UniProt is the bridge that lets Open
+                    Targets and HPIDB talk to each other.
+                </div>
+            </header>
+
+            <main class="thread" aria-label="Step-by-step pipeline walkthrough">
+
+                <div class="thread-step">
+                    <div class="thread-spine">
+                        <div class="step-badge">01</div>
+                        <div class="spine-line"></div>
+                    </div>
+                    <div class="step-body">
+                        <h2>Find the documentation</h2>
+                        <p>
+                            Our first step is to create a disease → target map.
+                            Before writing any code, let's find out what Open
+                            Targets actually offers for querying disease-target
+                            associations.
+                        </p>
+                        <ul>
+                            <li>
+                                <a href="https://platform-docs.opentargets.org/data-access/graphql-api">Open Targets GraphQL API docs</a>
+                            </li>
+                            <li>
+                                <a href="https://api.platform.opentargets.org/api/v4/graphql/browser">GraphQL playground</a>
+                            </li>
+                        </ul>
+                        <div class="takeaway">
+                            <strong>→</strong> Read the docs first. Know what
+                            fields are available before building the query.
+                        </div>
+                    </div>
+                </div>
+
+                <div class="thread-step">
+                    <div class="thread-spine">
+                        <div class="step-badge">02</div>
+                        <div class="spine-line"></div>
+                    </div>
+                    <div class="step-body">
+                        <h2>Head to the GraphQL playground and construct the query</h2>
+                        <p>
+                            Let's head to the playground so we can construct our
+                            query and get exactly what we need. We'll use the
+                            <code>disease</code> query — it accepts a disease ID
+                            and can return several things. In our case we're
+                            interested in: disease name, disease ID, UniProt IDs
+                            for each returned target, target name, and target ID.
+                        </p>
+                        <p>
+                            We can try it with one disease first, see what the
+                            data looks like and how it's returned — the shape of
+                            the response. We can also add the disease ID as a
+                            variable and name our query something like
+                            <code>fetch_top_targets</code>.
+                        </p>
+                        <pre><code>query fetch_top_targets($disease_id: String!) {
+  disease(efoId: $disease_id) {
+    id
+    name
+    associatedTargets(page: { index: 0, size: 100 }) {
+      rows {
+        score
+        target {
+          id
+          approvedSymbol
+          approvedName
+          proteinIds {
+            id
+            source
+          }
+        }
+      }
+    }
+  }
+}</code></pre>
+                        <p>Variables panel:</p>
+                        <pre><code>{ "disease_id": "EFO_0000398" }</code></pre>
+                        <div class="takeaway">
+                            <strong>→</strong> <code>associatedTargets.rows</code>
+                            is a list. Each row has a <code>score</code> and a
+                            nested <code>target</code> object with a
+                            <code>proteinIds</code> list inside it.
+                        </div>
+                    </div>
+                </div>
+
+                <div class="thread-step">
+                    <div class="thread-spine">
+                        <div class="step-badge">03</div>
+                        <div class="spine-line"></div>
+                    </div>
+                    <div class="step-body">
+                        <h2>Go back to the docs — fetch for a single disease in Python</h2>
+                        <p>
+                            Now let's go back to the documentation and see how
+                            we fetch targets using Python and print the result
+                            for a single disease. See if it works.
+                        </p>
+                        <pre><code>import requests
+
+OPEN_TARGETS_URL = "https://api.platform.opentargets.org/api/v4/graphql"
+
+fetch_top_targets_query = """
+query fetch_top_targets($disease_id: String!) {
+  disease(efoId: $disease_id) {
+    id
+    name
+    associatedTargets(page: { index: 0, size: 100 }) {
+      rows {
+        score
+        target {
+          id
+          approvedSymbol
+          approvedName
+          proteinIds { id source }
+        }
+      }
+    }
+  }
+}
+"""
+
+response = requests.post(
+    OPEN_TARGETS_URL,
+    json={
+        "query": fetch_top_targets_query,
+        "variables": {"disease_id": "EFO_0000398"},
+    },
+)
+
+data = response.json()
+print(data)</code></pre>
+                        <div class="takeaway">
+                            <strong>→</strong> The Python request mirrors
+                            exactly what worked in the playground — same query,
+                            same variable, just sent as JSON over HTTP.
+                        </div>
+                    </div>
+                </div>
+
+                <div class="thread-step">
+                    <div class="thread-spine">
+                        <div class="step-badge">04</div>
+                        <div class="spine-line"></div>
+                    </div>
+                    <div class="step-body">
+                        <h2>Iterate over our disease list and store as JSON</h2>
+                        <p>
+                            From there we can iterate over our full list of
+                            disease IDs, fetch each one, and store the results
+                            as a JSON file. We want something like this shape,
+                            which we can store as-is for now:
+                        </p>
+                        <pre><code>{
+  "disease_name": "dermatomyositis",
+  "disease_id": "EFO_0000398",
+  "top_targets": [
+    {
+      "target_name": "nuclear receptor subfamily 3 group C member 1",
+      "target_id": "ENSG00000113580",
+      "rank": 1,
+      "association_score": 0.534,
+      "uniprot_swissprot_id": "P04150"
+    }
+  ]
+}</code></pre>
+                        <p>
+                            Note: Open Targets doesn't return a <code>rank</code>
+                            field directly. We create it from the row position
+                            using <code>enumerate</code> — the list comes back
+                            pre-sorted by score, so position = rank.
+                        </p>
+                        <pre><code>for rank, row in enumerate(rows, start=1):
+    target = row["target"]
+
+    swissprot_ids = [
+        p["id"] for p in target["proteinIds"]
+        if p["source"] == "uniprot_swissprot"
+    ]
+
+    top_targets.append({
+        "target_name":        target["approvedName"],
+        "target_id":          target["id"],
+        "rank":               rank,
+        "association_score":  row["score"],
+        "uniprot_swissprot_id": swissprot_ids[0] if swissprot_ids else None,
+    })</code></pre>
+                        <div class="takeaway">
+                            <strong>→</strong> Once this JSON exists, all later
+                            scripts load it instead of calling Open Targets
+                            again.
+                        </div>
+                    </div>
+                </div>
+
+                <div class="thread-step">
+                    <div class="thread-spine">
+                        <div class="step-badge">05</div>
+                        <div class="spine-line"></div>
+                    </div>
+                    <div class="step-body">
+                        <h2>Advance the map — add pathogen hit data</h2>
+                        <p>
+                            From there, once we have a disease → target map, we
+                            can advance it even further and build a
+                            disease → target → pathogen-hit map.
+                        </p>
+                        <p>
+                            To do this let's start by loading the JSON file we
+                            created:
+                        </p>
+                        <pre><code>from pathlib import Path
+import json
+
+diseases = json.loads(
+    Path("data/outputs/disease_target_map.json").read_text()
+)</code></pre>
+                    </div>
+                </div>
+
+                <div class="thread-step">
+                    <div class="thread-spine">
+                        <div class="step-badge">06</div>
+                        <div class="spine-line"></div>
+                    </div>
+                    <div class="step-body">
+                        <h2>Pull all Swiss-Prot IDs from the map</h2>
+                        <p>
+                            Once we have that, let's collect all the Swiss-Prot
+                            UniProt IDs from our disease-target dataset into a
+                            set. This is what we'll use to look up matches in
+                            HPIDB.
+                        </p>
+                        <pre><code>host_target_uniprot_ids = {
+    target["uniprot_swissprot_id"]
+    for disease in diseases
+    for target in disease["top_targets"]
+    if target.get("uniprot_swissprot_id")
+}</code></pre>
+                        <div class="takeaway">
+                            <strong>→</strong> A set gives us O(1) lookup later —
+                            no looping through the full target list for every
+                            HPIDB row.
+                        </div>
+                    </div>
+                </div>
+
+                <div class="thread-step">
+                    <div class="thread-spine">
+                        <div class="step-badge">07</div>
+                        <div class="spine-line"></div>
+                    </div>
+                    <div class="step-body">
+                        <h2>Load HPIDB — read_text, split lines, delegate per-row logic</h2>
+                        <p>
+                            We'll then check HPIDB to see if our host targets
+                            are interacting with any pathogens. Instead of
+                            opening the file with a context manager, we use
+                            <code>read_text().splitlines()</code> to get all
+                            lines at once, then split each line on
+                            <code>\t</code> to get the columns. We delegate the
+                            per-row hit-finding logic to its own function to
+                            keep things clean.
+                        </p>
+                        <pre><code>def collect_pathogen_hits_by_target(target_uniprot_ids):
+    hits = {}
+    for line in (
+        Path("data/input/hpidb2.mitab/hpidb2.mitab_plus.txt")
+        .read_text(encoding="utf-8", errors="replace")
+        .splitlines()
+    ):
+        columns = line.split("\t")
+
+        result = get_pathogen_hit_for_target(columns, target_uniprot_ids)
+        if result:
+            host_id, pathogen_hit = result
+            hits.setdefault(host_id, []).append(pathogen_hit)
+
+    return hits</code></pre>
+                        <p>Every line comes back as a list of columns indexed from 0. Here's what each column contains — the ones we need are highlighted:</p>
+                        <ul class="col-list">
+                            <li><span class="col-n">00</span>ID interactor A<span class="col-eg">uniprotkb:P24071</span></li>
+                            <li><span class="col-n">01</span>ID interactor B<span class="col-eg">uniprotkb:A8E1U6</span></li>
+                            <li><span class="col-n">02</span>Alt IDs interactor A<span class="col-eg">intact:EBI-1036488|uniprotkb:Q13603|…</span></li>
+                            <li><span class="col-n">03</span>Alt IDs interactor B<span class="col-eg">intact:EBI-6401400</span></li>
+                            <li><span class="col-n">04</span>Aliases interactor A<span class="col-eg">uniprotkb:FCAR(gene name)|uniprotkb:CD89(synonym)|…</span></li>
+                            <li><span class="col-n">05</span>Aliases interactor B<span class="col-eg">uniprotkb:sl11(gene name)|…</span></li>
+                            <li><span class="col-n">06</span>Detection method<span class="col-eg">psi-mi:MI:0047(far western blotting)</span></li>
+                            <li><span class="col-n">07</span>Publication author<span class="col-eg">Chung et al. (2007)</span></li>
+                            <li><span class="col-n">08</span>Publication ID<span class="col-eg">pubmed:18045383|imex:IM-18162</span></li>
+                            <li class="used"><span class="col-n">09</span>Taxid interactor A<span class="col-eg">taxid:9606(human|Homo sapiens)</span></li>
+                            <li class="used"><span class="col-n">10</span>Taxid interactor B<span class="col-eg">taxid:1280(staau|Staphylococcus aureus)</span></li>
+                            <li><span class="col-n">11</span>Interaction type<span class="col-eg">psi-mi:MI:0915(physical association)</span></li>
+                            <li><span class="col-n">12</span>Source database<span class="col-eg">psi-mi:MI:0903(mpidb)</span></li>
+                            <li><span class="col-n">13</span>Interaction identifier<span class="col-eg">intact:EBI-6401409|mpidb:MPIDB-INT-1074|…</span></li>
+                            <li><span class="col-n">14</span>Confidence score<span class="col-eg">intact-miscore:0.40</span></li>
+                            <li class="used"><span class="col-n">15</span>Unique accession A<span class="col-eg">UNIPROT_AC:P24071</span></li>
+                            <li class="used"><span class="col-n">16</span>Unique accession B<span class="col-eg">UNIPROT_AC:A8E1U6</span></li>
+                            <li class="used"><span class="col-n">17</span>Organism kingdom A<span class="col-eg">ANIMAL</span></li>
+                            <li class="used"><span class="col-n">18</span>Organism kingdom B<span class="col-eg">VIRUS</span></li>
+                            <li><span class="col-n">19</span>Organism name A<span class="col-eg">human|Homo sapiens</span></li>
+                            <li><span class="col-n">20</span>Organism name B<span class="col-eg">staau|Staphylococcus aureus</span></li>
+                            <li><span class="col-n">21</span>Protein sequence A<span class="col-eg">MDPKQTTLLCLVLCLGQRIQAQ…</span></li>
+                            <li><span class="col-n">22</span>Protein sequence B<span class="col-eg">STLEVRSQATQDLKDYYKGQSF…</span></li>
+                            <li><span class="col-n">23</span>Database tag<span class="col-eg">MPIDB</span></li>
+                            <li class="used"><span class="col-n">24</span>Display name A<span class="col-eg">FCAR_HUMAN</span></li>
+                            <li class="used"><span class="col-n">25</span>Display name B<span class="col-eg">A8E1U6_STAAU</span></li>
+                        </ul>
+                        <div class="takeaway">
+                            <strong>→</strong> <code>errors="replace"</code>
+                            handles any dodgy encoding in the file without
+                            crashing. Columns 17 &amp; 18 carry the organism
+                            kingdom for each side — we use them to keep only
+                            <strong>viral</strong> pathogen hits.
+                        </div>
+                    </div>
+                </div>
+
+                <div class="thread-step">
+                    <div class="thread-spine">
+                        <div class="step-badge">08</div>
+                        <div class="spine-line"></div>
+                    </div>
+                    <div class="step-body">
+                        <h2>Parse each row — figure out which side is human</h2>
+                        <p>
+                            Each interaction row has two proteins. MITAB
+                            accessions look like <code>uniprotkb:P23458</code>
+                            and taxids look like
+                            <code>taxid:9606(Homo sapiens)</code> — so we need
+                            to parse out just the ID portion from each.
+                        </p>
+                        <pre><code>def fetch_hits_for_a_single_target(columns, target_uniprot_ids):
+    # accessions are "uniprotkb:P23458" — split on ":" and take the last part
+    protein_a = columns[15].split(":")[-1]
+    protein_b = columns[16].split(":")[-1]
+
+    # taxids are "taxid:9606(Homo sapiens)" — split on ":" then on "("
+    taxid_a = columns[9].split(":")[1].split("(")[0] if ":" in columns[9] else None
+    taxid_b = columns[10].split(":")[1].split("(")[0] if ":" in columns[10] else None
+
+    # columns 17 & 18 — organism kingdom for each side (ANIMAL, BACTERIA, VIRUS…)
+    kingdom_a = columns[17]
+    kingdom_b = columns[18]
+
+    # protein A is human, protein B is the pathogen
+    if taxid_a == "9606" and taxid_b != "9606":
+        host_id          = protein_a
+        pathogen_id      = protein_b
+        pathogen_taxid   = taxid_b
+        pathogen_name    = columns[25]
+        pathogen_kingdom = kingdom_b
+
+    # protein B is human, protein A is the pathogen
+    elif taxid_b == "9606" and taxid_a != "9606":
+        host_id          = protein_b
+        pathogen_id      = protein_a
+        pathogen_taxid   = taxid_a
+        pathogen_name    = columns[24]
+        pathogen_kingdom = kingdom_a
+
+    else:
+        return ""  # human-human or pathogen-pathogen — skip
+
+    # keep only viral pathogen hits
+    if pathogen_kingdom != "VIRUS":
+        return ""
+
+    if host_id not in target_uniprot_ids:
+        return ""  # not one of our targets — skip
+
+    pathogen_hit = {
+        "pathogen_molecule": pathogen_name,
+        "pathogen_id": pathogen_id,
+        "pathogen_taxid": pathogen_taxid,
+        "pathogen_kingdom": pathogen_kingdom,
+    }
+    return host_id, pathogen_hit</code></pre>
+                        <div class="takeaway">
+                            <strong>→</strong> Whichever side is the pathogen, we
+                            grab its kingdom from column 17 or 18 and bail out
+                            unless it's <code>VIRUS</code> — so only viral
+                            interactions make it into the map.
+                        </div>
+                    </div>
+                </div>
+
+                <div class="thread-step">
+                    <div class="thread-spine">
+                        <div class="step-badge">09</div>
+                        <div class="spine-line"></div>
+                    </div>
+                    <div class="step-body">
+                        <h2>Attach hits back and save the final map</h2>
+                        <p>
+                            We wire it together in <code>main()</code> — call
+                            collect to get <code>hits_by_target</code>, walk the
+                            disease-target map, look up each target's hits by its
+                            UniProt ID, attach the list, re-rank with the viral
+                            signal, then write the result to disk.
+                        </p>
+                        <pre><code>def main():
+    hits_by_target = collect_pathogen_hits_by_targets(target_uniprot_ids)
+
+    for disease in disease_list:
+        for target in disease["top_targets"]:
+            target_id     = target.get("uniprot_swissprot")
+            pathogen_hits = hits_by_target.get(target_id, [])
+            target["pathogen_hits"] = pathogen_hits
+
+    add_viral_informed_target_rank(disease_list)
+
+    Path("data/outputs/disease_target_pathogen_map.json").write_text(
+        json.dumps(disease_list, indent=2)
+    )
+
+main()</code></pre>
+                        <div class="takeaway">
+                            <strong>→</strong> Attaching the hits answers
+                            <em>which</em> targets have viral evidence — the next
+                            step turns that evidence into a re-ranking.
+                        </div>
+                    </div>
+                </div>
+
+                <div class="thread-step">
+                    <div class="thread-spine">
+                        <div class="step-badge">10</div>
+                        <div class="spine-line"></div>
+                    </div>
+                    <div class="step-body">
+                        <h2>Re-rank targets with the viral signal</h2>
+                        <p>
+                            Open Targets ranks purely on genetic association. But
+                            now that we know which targets actually interact with
+                            viruses, we can nudge that ranking — a target with
+                            strong viral evidence should climb. That's what
+                            <code>add_viral_informed_target_rank()</code> does,
+                            per disease.
+                        </p>
+                        <p>
+                            For each target we count its viral molecule hits and
+                            the number of distinct viral source taxa behind them,
+                            then carry the original association score forward as
+                            <code>association_score</code>:
+                        </p>
+                        <pre><code>for target in targets:
+    pathogen_hits = target.get("pathogen_hits", [])
+
+    viral_source_taxa = {
+        hit["pathogen_taxid"]
+        for hit in pathogen_hits
+        if hit.get("pathogen_taxid")
+    }
+
+    target["association_score"]           = target["score"]
+    target["viral_molecule_hit_count"]    = len(pathogen_hits)
+    target["viral_source_taxa_count"]     = len(viral_source_taxa)
+    target["supporting_interaction_count"] = len(pathogen_hits)</code></pre>
+                        <p>
+                            Then we normalise each target's hit count against the
+                            busiest target in that disease, and add up to a
+                            <code>0.2</code> bonus on top of the association
+                            score — that's the <code>viral_informed_score</code>:
+                        </p>
+                        <pre><code>max_viral_hits = max(
+    (t["viral_molecule_hit_count"] for t in targets),
+    default=0,
+)
+
+for target in targets:
+    viral_hit_bonus = (
+        target["viral_molecule_hit_count"] / max_viral_hits
+        if max_viral_hits else 0
+    )
+    target["viral_informed_score"] = (
+        target["association_score"] + 0.2 * viral_hit_bonus
+    )</code></pre>
+                        <p>
+                            Finally we sort by that new score to assign a
+                            <code>viral_informed_rank</code>, and record how many
+                            places each target moved versus its original Open
+                            Targets position as <code>rank_gain</code>:
+                        </p>
+                        <pre><code>ranked_targets = sorted(
+    targets,
+    key=lambda target: target["viral_informed_score"],
+    reverse=True,
+)
+
+for viral_rank, target in enumerate(ranked_targets, start=1):
+    target["viral_informed_rank"] = viral_rank
+    target["rank_gain"] = target["open_target_rank"] - viral_rank</code></pre>
+                        <div class="takeaway">
+                            <strong>→</strong> The bonus caps at
+                            <code>0.2</code>, so viral evidence can reshuffle the
+                            list without ever drowning out the genetic
+                            association. <code>rank_gain</code> makes the effect
+                            legible — a positive number means the virus data
+                            pushed that target up.
+                        </div>
+                    </div>
+                </div>
+
+            </main>
+
+            <div class="section-label">final output shape</div>
+
+            <pre><code>[
+  {
+    "disease_id": "MONDO_0013730",
+    "disease_name": "graft versus host disease",
+    "top_targets": [
+      {
+        "target_name": "Janus kinase 1",
+        "target_id": "ENSG00000162434",
+        "open_target_rank": 1,
+        "uniprot_swissprot": "P23458",
+        "score": 0.5372879669579735,
+        "pathogen_hits": [
+          {
+            "pathogen_molecule": "NS1_I97A1",
+            "pathogen_id": "O56264",
+            "pathogen_taxid": "130763",
+            "pathogen_kingdom": "VIRUS"
+          }
+        ],
+        "association_score": 0.5372879669579735,
+        "viral_molecule_hit_count": 1,
+        "viral_source_taxa_count": 1,
+        "supporting_interaction_count": 1,
+        "viral_informed_score": 0.7372879669579735,
+        "viral_informed_rank": 1,
+        "rank_gain": 0
+      }
+    ]
+  }
+]</code></pre>
+
+            <div class="section-label">reference</div>
+
+            <div class="info-grid">
+                <div class="info-block">
+                    <h3>Inputs</h3>
+                    <ul>
+                        <li>
+                            <strong>data/input/disease_id.json</strong>
+                            Disease IDs to query
+                        </li>
+                        <li>
+                            <strong>Open Targets GraphQL API</strong>
+                            Disease-target associations and protein IDs
+                        </li>
+                        <li>
+                            <strong>hpidb2.mitab_plus.txt</strong>
+                            Local HPIDB host-pathogen interaction file
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="info-block">
+                    <h3>Outputs</h3>
+                    <ul>
+                        <li>
+                            <strong>disease_target_map.json</strong>
+                            Disease → target → UniProt map
+                        </li>
+                        <li>
+                            <strong>disease_target_pathogen_map.json</strong>
+                            Disease → target → pathogen-hit map
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="info-block">
+                    <h3>Debugging rules</h3>
+                    <ul>
+                        <li>If the value is a list, loop before using string keys</li>
+                        <li>Use <code>json.dumps(v, indent=2)</code> for readable output</li>
+                        <li>Do not print <code>None</code> for every missed HPIDB row</li>
+                        <li>Use <code>reader.py</code> to inspect one MITAB row by column index</li>
+                    </ul>
+                </div>
+            </div>
+
+        </div>
+    </body>
+</html>

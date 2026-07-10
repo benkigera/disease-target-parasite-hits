@@ -1,0 +1,40 @@
+{
+  "source": "EFO 3.88 term replacement metadata",
+  "migrated": [
+    {"condition": "dermatomyositis", "old_id": "EFO_0000398", "new_id": "MONDO_0016367"},
+    {"condition": "adult-onset Still disease", "old_id": "EFO_0007135", "new_id": "MONDO_0019355"},
+    {"condition": "polymyositis", "old_id": "EFO_0003063", "new_id": "MONDO_0019127"},
+    {"condition": "juvenile idiopathic arthritis", "old_id": "EFO_0002609", "new_id": "MONDO_0011429"},
+    {"condition": "antisynthetase syndrome", "old_id": "EFO_1001982", "new_id": "MONDO_0019344"},
+    {"condition": "scleroderma", "old_id": "EFO_1001993", "new_id": "MONDO_0019340"},
+    {"condition": "Kawasaki disease", "old_id": "EFO_0004246", "new_id": "MONDO_0012727"},
+    {"condition": "SAPHO syndrome", "old_id": "EFO_1001164", "new_id": "MONDO_0019266"},
+    {"condition": "Sjogren syndrome", "old_id": "EFO_0000699", "new_id": "MONDO_0010030"},
+    {"condition": "Takayasu arteritis", "old_id": "EFO_1001857", "new_id": "MONDO_0017991"},
+    {"condition": "hypersensitivity vasculitis", "old_id": "EFO_1000974", "new_id": "MONDO_0006794"},
+    {"condition": "mixed connective tissue disease", "old_id": "EFO_0007374", "new_id": "MONDO_0005854"},
+    {"condition": "reactive arthritis", "old_id": "EFO_0007460", "new_id": "MONDO_0017376"},
+    {"condition": "temporal arteritis", "old_id": "EFO_1001209", "new_id": "MONDO_0008538"},
+    {"condition": "eosinophilic granulomatosis with polyangiitis", "old_id": "EFO_0007208", "new_id": "MONDO_0015943"},
+    {"condition": "Behcet disease", "old_id": "EFO_0003780", "new_id": "MONDO_0007191"},
+    {"condition": "cryoglobulinemia", "old_id": "EFO_0005846", "new_id": "MONDO_0005576"},
+    {"condition": "uveoparotid fever", "old_id": "EFO_1001232", "new_id": "MONDO_0007011"},
+    {"condition": "eosinophilia-myalgia syndrome", "old_id": "EFO_1001316", "new_id": "MONDO_0004941"},
+    {"condition": "relapsing polychondritis", "old_id": "EFO_1001148", "new_id": "MONDO_0019125"},
+    {"condition": "rheumatoid arthritis", "old_id": "EFO_0000685", "new_id": "MONDO_0008383"},
+    {"condition": "polymyalgia rheumatica", "old_id": "EFO_0008518", "new_id": "MONDO_0019735"},
+    {"condition": "ankylosing spondylitis", "old_id": "EFO_0003898", "new_id": "MONDO_0005306"},
+    {"condition": "psoriatic arthritis", "old_id": "EFO_0003778", "new_id": "MONDO_0011849"},
+    {"condition": "Felty syndrome", "old_id": "EFO_0007269", "new_id": "MONDO_0007603"}
+  ],
+  "removed_invalid_inputs": [
+    {
+      "old_id": "MONDO_0007823",
+      "reason": "Obsolete insulin-receptor trait with no replacement; not an autoimmune condition."
+    },
+    {
+      "old_id": "EFO_0003058",
+      "reason": "Obsolete NCI-H460 cell-line identifier; not an autoimmune condition."
+    }
+  ]
+}

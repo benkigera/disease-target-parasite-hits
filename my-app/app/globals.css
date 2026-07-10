@@ -1,0 +1,546 @@
+@import url("https://fonts.googleapis.com/css2?family=Bodoni+Moda:opsz,wght@6..96,400..900&family=Space+Grotesk:wght@300..700&display=swap");
+@import "tailwindcss";
+
+:root {
+  --font-sans: ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+  --font-display: var(--font-sans);
+
+  --capsule-cream: #f5f5f0;
+  --capsule-ink: #1a1a1a;
+  --capsule-outline: #1e1e1e;
+  --capsule-white: #ffffff;
+  --capsule-coral: #e85d4e;
+  --capsule-lime: #c4d94e;
+  --capsule-lavender: #c5b5e0;
+  --capsule-sky: #8bb4f7;
+  --capsule-violet: #a06ce8;
+  --capsule-yellow: #f2d160;
+  --capsule-peach: #f5b895;
+  --capsule-mint: #a8e6cf;
+  --capsule-shadow: rgb(26 26 26 / 0.08);
+
+  --color-page: #fafaf8;
+  --color-surface: #ffffff;
+  --color-surface-muted: #f8fafc;
+  --color-border: #cbd5e1;
+  --color-border-soft: #e2e8f0;
+  --color-text: #0f172a;
+  --color-text-muted: #64748b;
+  --color-text-subtle: #94a3b8;
+
+  --color-score: #0369a1;
+  --color-score-soft: #e0f2fe;
+  --color-candidate: #10b981;
+  --color-candidate-strong: #059669;
+  --color-candidate-soft: #ecfdf5;
+  --color-candidate-border: #10b981;
+  --color-empty: #cbd5e1;
+  --color-selected: #f97316;
+  --color-selected-strong: #c2410c;
+  --color-selected-soft: rgb(0 0 0 / 0.05);
+  --color-warning: #92400e;
+  --color-warning-soft: #fef3c7;
+
+  --shadow-card: 0 18px 45px rgb(15 23 42 / 0.08);
+  --app-chrome-height: 88px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  background: var(--color-page);
+}
+
+body {
+  margin: 0;
+  background: var(--color-page);
+  color: var(--color-text);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: geometricPrecision;
+}
+
+.app-chrome {
+  background: #1f1f1f;
+  box-shadow:
+    0 1px 0 rgb(255 255 255 / 0.08),
+    0 14px 30px rgb(15 23 42 / 0.16);
+  color: #fff;
+  isolation: isolate;
+  position: sticky;
+  top: 0;
+  z-index: 50;
+}
+
+.app-chrome::before {
+  background: #1f1f1f;
+  block-size: 120px;
+  content: "";
+  inset-block-end: 100%;
+  inset-inline: 0;
+  position: absolute;
+  z-index: -1;
+}
+
+.sticky-index-controls {
+  background: var(--color-page);
+  box-shadow:
+    0 1px 0 rgb(15 23 42 / 0.08),
+    0 10px 26px rgb(15 23 42 / 0.07);
+  position: sticky;
+  top: var(--app-chrome-height);
+  z-index: 30;
+}
+
+button,
+select {
+  font: inherit;
+}
+
+.font-display {
+  font-family: var(--font-display);
+  text-wrap: balance;
+}
+
+p,
+li {
+  text-wrap: pretty;
+}
+
+.control-surface {
+  background: var(--color-surface);
+  transition-duration: 160ms;
+  transition-property: background-color, border-color, box-shadow;
+  transition-timing-function: cubic-bezier(0.2, 0, 0, 1);
+}
+
+.control-surface:hover,
+.popover-surface {
+  background: var(--color-surface);
+}
+
+.candidate-icon-surface {
+  background: color-mix(in srgb, var(--color-surface) 45%, transparent);
+}
+
+.interactive-link {
+  transition-duration: 160ms;
+  transition-property: background-color, border-color, color, box-shadow;
+  transition-timing-function: cubic-bezier(0.2, 0, 0, 1);
+}
+
+.row-hover-candidate:hover {
+  background: rgb(0 0 0 / 0.05);
+}
+
+.row-hover-candidate {
+  transition-duration: 160ms;
+  transition-property: background-color, box-shadow, outline-color;
+  transition-timing-function: cubic-bezier(0.2, 0, 0, 1);
+}
+
+.row-hover-candidate:focus-visible {
+  outline: 2px solid var(--color-score);
+  outline-offset: -2px;
+}
+
+.expanded-detail {
+  animation: detail-fade 180ms cubic-bezier(0.16, 1, 0.3, 1);
+  background: #fafaf8;
+  border-collapse: separate;
+  border-spacing: 0;
+  color: #1a1a1a;
+  cursor: default;
+  font-family: system-ui, -apple-system, sans-serif;
+  font-size: 0.82rem;
+  line-height: 1.6;
+  min-width: 0;
+  overflow: hidden;
+  padding: 1rem 1.25rem;
+  text-indent: 0;
+}
+
+.expanded-detail-grid {
+  display: grid;
+  gap: 3rem;
+  grid-template-columns: 300px minmax(0, 1fr);
+  min-width: 0;
+}
+
+.expanded-detail-radar {
+  min-width: 0;
+}
+
+.expanded-detail-radar-title,
+.expanded-detail-info h4,
+.pathogen-insight-title {
+  color: #888;
+  font-family: system-ui, -apple-system, sans-serif;
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  margin: 0 0 0.4rem;
+  text-transform: uppercase;
+}
+
+.expanded-detail-radar-title {
+  margin-bottom: 0.75rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tufte-radar {
+  display: block;
+  height: auto;
+  width: 300px;
+}
+
+.tufte-radar-label {
+  fill: #4b5563;
+  font-size: 10px;
+  font-weight: 600;
+}
+
+.expanded-detail-info {
+  min-width: 0;
+  overflow: hidden;
+}
+
+.expanded-detail-description-section,
+.expanded-detail-guidelines,
+.expanded-detail-needs,
+.expanded-detail-companies,
+.expanded-detail-external-links,
+.expanded-detail-pathogen {
+  margin-bottom: 2.2rem;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.expanded-detail-description {
+  color: #444444;
+  font-family: Georgia, serif;
+  font-size: 13.6px;
+  line-height: 1.65;
+  margin: 1rem 0 1.25rem;
+  max-width: 76rem;
+}
+
+.expanded-detail-meta,
+.guideline-drugs,
+.company-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+}
+
+.expanded-detail-therapeutic-area-badge,
+.prevalence-badge,
+.guideline-drug-badge {
+  align-items: center;
+  background: transparent;
+  border: 1px solid #d8dee8;
+  border-radius: 0.5rem;
+  color: #475569;
+  display: inline-flex;
+  font-size: 0.82rem;
+  font-weight: 500;
+  gap: 0.35rem;
+  line-height: 1;
+  padding: 0.5rem 0.7rem;
+  text-decoration: none;
+}
+
+.company-badge {
+  align-items: center;
+  background: #f5f5f0;
+  border: 1px solid #e0e0dc;
+  border-radius: 3px;
+  color: #334155;
+  display: inline-flex;
+  font-size: 0.75rem;
+  gap: 0.25rem;
+  line-height: 1.35;
+  padding: 0.2rem 0.5rem;
+  text-decoration: none;
+  transition: background-color 150ms ease, border-color 150ms ease;
+}
+
+.company-badge:hover {
+  background: #ffffff;
+  border-color: #cbd5e1;
+}
+
+.selected-filter-badge-kind {
+  border-radius: 999px;
+  font-size: 0.65rem;
+  font-weight: 700;
+  padding: 0.12rem 0.38rem;
+}
+
+.selected-filter-badge-kind-therapeuticArea {
+  background: #fff7ed;
+  color: #92400e;
+}
+
+.prevalence-badge {
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.modality-icon-fallback {
+  align-items: center;
+  border: 1px solid #94a3b8;
+  border-radius: 999px;
+  color: #64748b;
+  display: inline-flex;
+  height: 1rem;
+  justify-content: center;
+  width: 1rem;
+}
+
+.unmet-needs-list {
+  color: #334155;
+  margin: 1rem 0 0;
+  padding-left: 1.1rem;
+}
+
+.unmet-needs-list li + li {
+  margin-top: 0.45rem;
+}
+
+.company-link-icon {
+  color: currentColor;
+  font-size: 0.85em;
+  opacity: 0.62;
+}
+
+.pathogen-table-head {
+  color: #94a3b8;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.pathogen-insight {
+  border-top: 1px solid #cbd5e1;
+  padding-top: 1.25rem;
+}
+
+.pathogen-insight-header {
+  align-items: start;
+  border-bottom: 1px solid #d8dee8;
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: minmax(0, 1fr) auto;
+  padding-bottom: 1rem;
+}
+
+.pathogen-insight-subtitle {
+  color: #64748b;
+  margin: 0.45rem 0 0;
+}
+
+.pathogen-evidence-legend {
+  align-items: center;
+  color: #64748b;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  white-space: nowrap;
+}
+
+.pathogen-table-head,
+.pathogen-table-row {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: minmax(150px, 1.1fr) minmax(104px, 0.72fr) minmax(96px, 0.62fr) minmax(210px, 1.4fr) 96px 70px;
+}
+
+.pathogen-table-head {
+  border-bottom: 1px solid #d8dee8;
+  padding: 0.8rem 0;
+}
+
+.pathogen-table-row {
+  align-items: center;
+  border-bottom: 1px solid #e5e7eb;
+  color: #1f2937;
+  padding: 0.9rem 0;
+}
+
+.pathogen-primary {
+  color: #1f2937;
+  font-weight: 600;
+  line-height: 1.35;
+}
+
+.pathogen-secondary {
+  color: #94a3b8;
+  font-size: 0.78rem;
+}
+
+.data-tag {
+  border: 1px solid #cbd5e1;
+  border-radius: 4px;
+  color: #475569;
+  display: inline-flex;
+  font-size: 0.66rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  line-height: 1;
+  padding: 0.22rem 0.38rem;
+  text-transform: uppercase;
+}
+
+.data-tag-strong {
+  background: #f1f5f9;
+  border-color: #94a3b8;
+  color: #334155;
+}
+
+.pathogen-foot {
+  border-top: 1px solid #d8dee8;
+  color: #475569;
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: minmax(0, 1fr) 300px;
+  padding-top: 1rem;
+}
+
+.pathogen-caution {
+  border-left: 1px solid #d8dee8;
+  color: #92400e;
+  font-size: 0.78rem;
+  padding-left: 1rem;
+}
+
+@media (max-width: 900px) {
+  .expanded-detail-grid,
+  .pathogen-insight-header,
+  .pathogen-foot {
+    grid-template-columns: 1fr;
+  }
+
+  .pathogen-table {
+    overflow-x: auto;
+  }
+
+  .pathogen-table-head,
+  .pathogen-table-row {
+    min-width: 900px;
+  }
+}
+
+@keyframes detail-fade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes virus-wiggle {
+  0%, 100% { transform: rotate(-4deg) scale(1); }
+  50% { transform: rotate(5deg) scale(1.08); }
+}
+
+.row-selected {
+  background: var(--color-selected-soft);
+}
+
+.bubble-candidate {
+  border-color: var(--color-candidate);
+  background: color-mix(in srgb, var(--color-candidate) 70%, transparent);
+}
+
+.bubble-empty {
+  border-color: var(--color-empty);
+  background: color-mix(in srgb, var(--color-empty) 60%, transparent);
+}
+
+.bubble-selected {
+  border-color: var(--color-selected);
+  background: color-mix(in srgb, var(--color-selected) 85%, transparent);
+}
+
+.metric-pill-blue {
+  background: #e0f2fe;
+  color: #075985;
+}
+
+.metric-pill-green {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.metric-pill-orange {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.metric-pill-warm {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.metric-badge {
+  align-items: center;
+  border-radius: 4px;
+  display: inline-flex;
+  font-weight: 700;
+  height: 32px;
+  justify-content: center;
+  width: 32px;
+}
+
+@media (max-width: 767px) {
+  .metric-badge {
+    height: 28px;
+    width: 28px;
+  }
+}
+
+.numeric {
+  font-variant-numeric: tabular-nums;
+}
+
+.disease-name-cell,
+.disease-name-main {
+  min-width: 0;
+}
+
+.disease-name-main {
+  flex: auto;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.chart-grid {
+  display: grid;
+  grid-template-columns: 18px 1fr;
+  gap: 0.75rem;
+}
+
+.chart-y-label {
+  align-self: center;
+  color: var(--color-text);
+  font-size: 1rem;
+  font-weight: 600;
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

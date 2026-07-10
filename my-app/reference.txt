@@ -1,0 +1,512 @@
+import { useState, useMemo } from "react";
+import { ScatterChart, Scatter, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, ZAxis } from "recharts";
+
+const INDICATIONS = [
+  {
+    id: 1, condition: "Systemic lupus erythematosus", area: "Rheumatology",
+    eff: 6, pre: 5, saf: 6, con: 5, pip: 4,
+    prevalence: "Common", burden: 6,
+    parasite: true,
+    parasiteMolecule: "ES-62 (A. viteae)",
+    parasiteParasite: "Acanthocheilonema viteae (filarial nematode)",
+    parasiteMechanism: "ES-62 desensitises TLR4 signalling via MyD88 degradation, blunting type-I IFN and IL-6 cascades — the dominant pathology in SLE.",
+    parasiteEvidence: "Murine MRL/lpr model: significant reduction in anti-dsDNA antibodies and glomerulonephritis. Harnett et al., J Immunol 2011.",
+    parasiteRef: "https://pubmed.ncbi.nlm.nih.gov/21670313/",
+    currentSoC: "Hydroxychloroquine, belimumab, anifrolumab. Significant residual flares; anifrolumab only partial responder in ~50%.",
+    whyExciting: "No curative option. Parasite-derived TLR modulators could reset immune tolerance without broad immunosuppression."
+  },
+  {
+    id: 2, condition: "Crohn's disease", area: "Gastroenterology",
+    eff: 6, pre: 5, saf: 5, con: 5, pip: 5,
+    prevalence: "Common", burden: 6,
+    parasite: true,
+    parasiteMolecule: "TSP-1 (N. americanus) / LNFPIII (S. mansoni)",
+    parasiteParasite: "Necator americanus (hookworm) / Schistosoma mansoni",
+    parasiteMechanism: "Hookworm ES products drive Treg expansion and IL-10 secretion in the lamina propria, recalibrating Th1/Th17 bias. LNFPIII activates tolerogenic DCs via DC-SIGN.",
+    parasiteEvidence: "Phase 2 RCT (Nottingham, 2015): hookworm infection reduced CDAI scores vs placebo. Broadhurst et al., Sci Transl Med 2010 (LNFPIII).",
+    parasiteRef: "https://pubmed.ncbi.nlm.nih.gov/20374996/",
+    currentSoC: "Anti-TNF (adalimumab, infliximab), anti-integrins, IL-12/23 blockade. ~30-40% primary non-responders.",
+    whyExciting: "Helminthic therapy has direct clinical precedent in IBD. Molecule isolation could replace live-worm trials."
+  },
+  {
+    id: 3, condition: "Multiple sclerosis (relapsing-remitting)", area: "Neurology",
+    eff: 6, pre: 5, saf: 5, con: 5, pip: 6,
+    prevalence: "Common", burden: 7,
+    parasite: true,
+    parasiteMolecule: "FhHDM-1 (F. hepatica)",
+    parasiteParasite: "Fasciola hepatica (liver fluke)",
+    parasiteMechanism: "FhHDM-1 suppresses macrophage NLRP3 inflammasome activation and reduces TNF/IL-6 secretion, blocking CNS immune cell infiltration without depleting T cells.",
+    parasiteEvidence: "EAE murine model: FhHDM-1 administration dramatically reduced clinical scores and demyelination. Robinson et al., Sci Rep 2016.",
+    parasiteRef: "https://www.nature.com/articles/srep37789",
+    currentSoC: "Natalizumab, ocrelizumab, siponimod. High efficacy but serious infection risk (PML with natalizumab); no reversal of neurodegeneration.",
+    whyExciting: "FhHDM-1 decouples immune modulation from general immunosuppression — a new mechanism class entirely."
+  },
+  {
+    id: 4, condition: "Rheumatoid arthritis", area: "Rheumatology",
+    eff: 5, pre: 6, saf: 5, con: 4, pip: 6,
+    prevalence: "Widespread", burden: 5,
+    parasite: true,
+    parasiteMolecule: "Evasin-1 / Evasin-3 (Rhipicephalus tick)",
+    parasiteParasite: "Rhipicephalus sanguineus (brown dog tick)",
+    parasiteMechanism: "Evasins are chemokine-binding proteins that scavenge CCL3/CCL4 (Evasin-1) and CXCL8/CXCL1 (Evasin-3), blocking neutrophil and macrophage infiltration into synovium.",
+    parasiteEvidence: "Murine collagen-induced arthritis model: Evasin-1 reduced paw swelling and synovitis scores. Deruaz et al., J Exp Med 2008.",
+    parasiteRef: "https://pubmed.ncbi.nlm.nih.gov/18426989/",
+    currentSoC: "MTX + anti-TNF or JAK inhibitors. ~40% achieve low disease activity; long-term safety of JAKi under scrutiny.",
+    whyExciting: "Tick chemokine scavengers offer joint-targeted inflammation resolution without systemic cytokine suppression."
+  },
+  {
+    id: 5, condition: "Type 1 diabetes", area: "Endocrinology",
+    eff: 7, pre: 4, saf: 4, con: 6, pip: 4,
+    prevalence: "Common", burden: 7,
+    parasite: true,
+    parasiteMolecule: "FhHDM-1 / ES-62",
+    parasiteParasite: "Fasciola hepatica / A. viteae",
+    parasiteMechanism: "FhHDM-1 inhibits macrophage-driven islet infiltration (insulitis) in NOD mice without broad immunosuppression. Mechanistically distinct from existing anti-CD3 approaches.",
+    parasiteEvidence: "NOD mouse model: FhHDM-1 delayed T1D onset and preserved islet architecture. Robinson et al., Sci Rep 2016.",
+    parasiteRef: "https://www.nature.com/articles/srep37789",
+    currentSoC: "Insulin therapy (not curative); teplizumab (anti-CD3) delays onset ~2yrs in at-risk. No remission-inducing therapy approved.",
+    whyExciting: "Highest EFF score in endocrinology. Beta cell loss is permanent — prevention window via parasite-derived immune reset is immense."
+  },
+  {
+    id: 6, condition: "Ulcerative colitis", area: "Gastroenterology",
+    eff: 5, pre: 5, saf: 4, con: 4, pip: 5,
+    prevalence: "Common", burden: 5,
+    parasite: true,
+    parasiteMolecule: "Trichinella spiralis ES products",
+    parasiteParasite: "Trichinella spiralis",
+    parasiteMechanism: "T. spiralis ES proteins expand intestinal Tregs and suppress Th2 mucosal inflammation via IL-10 and TGF-β induction. Distinct from Crohn's Th1/Th17 axis.",
+    parasiteEvidence: "DSS colitis murine model: T. spiralis ES extracts reduced colon histopathology scores. Multiple groups, summarised Smallwood et al., 2017.",
+    parasiteRef: "https://pubmed.ncbi.nlm.nih.gov/28337204/",
+    currentSoC: "5-ASA, anti-TNF, anti-integrin (vedolizumab). Vedolizumab gut-selective but still incomplete remission in majority.",
+    whyExciting: "Gut-tropic parasite molecules may offer gut-selective immunomodulation — the holy grail that vedolizumab tried to achieve."
+  },
+  {
+    id: 7, condition: "Atopic dermatitis (severe)", area: "Dermatology",
+    eff: 5, pre: 6, saf: 3, con: 4, pip: 5,
+    prevalence: "Widespread", burden: 5,
+    parasite: true,
+    parasiteMolecule: "HpARI / HpBARI (H. polygyrus)",
+    parasiteParasite: "Heligmosomoides polygyrus (intestinal nematode)",
+    parasiteMechanism: "HpARI blocks IL-33 signalling (a key driver of type-2 skin inflammation) by competing with ST2 receptor. HpBARI inhibits TSLP. Together they suppress ILC2 activation.",
+    parasiteEvidence: "In vitro human PBMCs and murine skin challenge models. Osbourn et al., Immunity 2017; Rolot et al., JCI Insight 2018.",
+    parasiteRef: "https://pubmed.ncbi.nlm.nih.gov/28930661/",
+    currentSoC: "Dupilumab (anti-IL-4Rα) is highly effective but ~$35k/yr; many patients with mild-moderate disease unserved.",
+    whyExciting: "HpARI is an IL-33 decoy receptor — same node dupilumab hits upstream, potentially with better tissue specificity."
+  },
+  {
+    id: 8, condition: "Primary progressive multiple sclerosis", area: "Neurology",
+    eff: 7, pre: 3, saf: 5, con: 5, pip: 3,
+    prevalence: "Uncommon", burden: 7,
+    parasite: true,
+    parasiteMolecule: "FhHDM-1 (F. hepatica)",
+    parasiteParasite: "Fasciola hepatica",
+    parasiteMechanism: "Same innate suppression mechanism as RRMS, but particularly relevant in PPMS where neuroinflammation persists without discrete relapses — macrophage/microglial targeting is key.",
+    parasiteEvidence: "Inferred from EAE chronic models. No PPMS-specific parasite trials yet — this is the gap.",
+    parasiteRef: "https://www.nature.com/articles/srep37789",
+    currentSoC: "Ocrelizumab (only approved therapy). Slows progression by ~24% — modest. Nothing reverses disability.",
+    whyExciting: "High EFF, low pipeline, no curative option. A truly neglected space where novel immune-reset mechanisms could differentiate."
+  },
+  {
+    id: 9, condition: "Psoriatic arthritis", area: "Rheumatology",
+    eff: 5, pre: 4, saf: 4, con: 4, pip: 5,
+    prevalence: "Common", burden: 5,
+    parasite: false,
+    parasiteMolecule: null,
+    currentSoC: "IL-17A inhibitors (secukinumab), JAK inhibitors (upadacitinib). Good efficacy but cardiovascular and infection signals with JAKi.",
+    whyExciting: "Parasite IL-17 modulators unexplored in this indication — known helminth suppression of Th17 may apply."
+  },
+  {
+    id: 10, condition: "Myasthenia gravis", area: "Neurology",
+    eff: 6, pre: 3, saf: 5, con: 5, pip: 4,
+    prevalence: "Uncommon", burden: 6,
+    parasite: false,
+    parasiteMolecule: null,
+    currentSoC: "Acetylcholinesterase inhibitors, eculizumab, efgartigimod. Significant residual weakness in many; eculizumab very costly.",
+    whyExciting: "Complement-blocking tick molecules (eg. OmCI from O. moubata) are directly relevant to this complement-mediated disease."
+  },
+  {
+    id: 11, condition: "Neuromyelitis optica spectrum disorder", area: "Neurology",
+    eff: 7, pre: 2, saf: 5, con: 5, pip: 3,
+    prevalence: "Rare", burden: 7,
+    parasite: false,
+    parasiteMolecule: null,
+    currentSoC: "Inebilizumab, satralizumab, eculizumab. Highly active disease; attacks cause severe irreversible disability.",
+    whyExciting: "Aquaporin-4 antibody pathology — helminth IL-10 induction may dampen the B cell autoimmunity axis."
+  },
+  {
+    id: 12, condition: "Systemic sclerosis (scleroderma)", area: "Rheumatology",
+    eff: 7, pre: 3, saf: 6, con: 5, pip: 3,
+    prevalence: "Rare", burden: 7,
+    parasite: true,
+    parasiteMolecule: "HES (H. polygyrus excretory-secretory products)",
+    parasiteParasite: "Heligmosomoides polygyrus",
+    parasiteMechanism: "HES suppresses TGF-β-driven fibroblast activation — the core pathology in scleroderma — via Treg induction and IL-10. TGF-β is also the central helminth evasion target.",
+    parasiteEvidence: "Bleomycin fibrosis murine model: helminth ES products reduced dermal thickness and collagen deposition. Wolterink-Donselaar et al., and indirect from Evasin-1/lung fibrosis work.",
+    parasiteRef: "https://pubmed.ncbi.nlm.nih.gov/20374996/",
+    currentSoC: "Tocilizumab (anti-IL-6) slows skin progression. No antifibrotic approved for systemic sclerosis specifically.",
+    whyExciting: "TGF-β is the shared node between helminth immune evasion and scleroderma fibrosis — a mechanistically beautiful convergence."
+  },
+  {
+    id: 13, condition: "Ankylosing spondylitis", area: "Rheumatology",
+    eff: 5, pre: 4, saf: 4, con: 4, pip: 5,
+    prevalence: "Common", burden: 5,
+    parasite: false,
+    parasiteMolecule: null,
+    currentSoC: "Anti-TNF, IL-17A inhibitors (secukinumab, ixekizumab). Reasonable efficacy but non-responders lack options.",
+    whyExciting: "HLA-B27 association; IL-17 suppression by helminths may be relevant but unexplored."
+  },
+  {
+    id: 14, condition: "Autoimmune hepatitis", area: "Hepatology",
+    eff: 5, pre: 3, saf: 5, con: 4, pip: 2,
+    prevalence: "Uncommon", burden: 6,
+    parasite: true,
+    parasiteMolecule: "Schistosoma mansoni egg antigens (SEA)",
+    parasiteParasite: "Schistosoma mansoni",
+    parasiteMechanism: "S. mansoni SEA drives hepatic Treg expansion and suppresses the CD8+ T cell hepatocyte attack via IL-10 and TGF-β induction in the liver microenvironment.",
+    parasiteEvidence: "Concanavalin A hepatitis model in mice. Zhu et al., J Immunol 2011. Epidemiological inverse correlation in schistosome-endemic regions.",
+    parasiteRef: "https://pubmed.ncbi.nlm.nih.gov/21464088/",
+    currentSoC: "Corticosteroids + azathioprine. ~15% develop cirrhosis despite treatment; steroid toxicity is chronic burden.",
+    whyExciting: "Very low pipeline (PIP 2), organ-specific target, and direct mechanistic plausibility from parasite liver biology."
+  },
+  {
+    id: 15, condition: "Primary biliary cholangitis", area: "Hepatology",
+    eff: 6, pre: 3, saf: 4, con: 4, pip: 3,
+    prevalence: "Uncommon", burden: 6,
+    parasite: false,
+    parasiteMolecule: null,
+    currentSoC: "Ursodeoxycholic acid (40% non-responders); obeticholic acid for second-line. Liver transplant in advanced disease.",
+    whyExciting: "High EFF + low PIP = strong white space. Biliary inflammation not well served by any parasite model yet — opportunity."
+  },
+];
+
+const COMPOSITE = (d) => {
+  return (0.55 * d.eff + 0.25 * d.pre + 0.10 * (7 - d.pip) + 0.05 * d.saf + 0.05 * d.con);
+};
+
+const AREAS = [...new Set(INDICATIONS.map(d => d.area))].sort();
+
+const COLORS = {
+  parasite: "#1D9E75",
+  noParasite: "#888780",
+  selected: "#D85A30",
+};
+
+const ScoreDot = ({ value, max = 7, color }) => {
+  const pct = value / max;
+  return (
+    <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+      <div style={{ flex: 1, height: 5, background: "var(--color-background-secondary)", borderRadius: 3, overflow: "hidden" }}>
+        <div style={{ width: `${pct * 100}%`, height: "100%", background: color || "var(--color-text-secondary)", borderRadius: 3 }} />
+      </div>
+      <span style={{ fontSize: 12, fontWeight: 500, minWidth: 14, color: "var(--color-text-primary)" }}>{value}</span>
+    </div>
+  );
+};
+
+const ScoreRow = ({ label, value, color }) => (
+  <div style={{ marginBottom: 6 }}>
+    <div style={{ fontSize: 11, color: "var(--color-text-secondary)", marginBottom: 3, textTransform: "uppercase", letterSpacing: "0.06em" }}>{label}</div>
+    <ScoreDot value={value} color={color} />
+  </div>
+);
+
+const CustomTooltip = ({ active, payload }) => {
+  if (!active || !payload?.length) return null;
+  const d = payload[0]?.payload;
+  if (!d) return null;
+  return (
+    <div style={{
+      background: "var(--color-background-primary)",
+      border: "0.5px solid var(--color-border-secondary)",
+      borderRadius: "var(--border-radius-md)",
+      padding: "10px 14px",
+      fontSize: 12,
+      maxWidth: 220,
+      pointerEvents: "none",
+    }}>
+      <div style={{ fontWeight: 500, marginBottom: 4, color: "var(--color-text-primary)" }}>{d.condition}</div>
+      <div style={{ color: "var(--color-text-secondary)", marginBottom: 6 }}>{d.area}</div>
+      <div style={{ display: "flex", gap: 16 }}>
+        <div><span style={{ color: "var(--color-text-secondary)" }}>EFF </span><span style={{ fontWeight: 500 }}>{d.eff}/7</span></div>
+        <div><span style={{ color: "var(--color-text-secondary)" }}>PIP </span><span style={{ fontWeight: 500 }}>{d.pip}/7</span></div>
+      </div>
+      {d.parasite && (
+        <div style={{ marginTop: 6, padding: "4px 8px", background: "#E1F5EE", borderRadius: 4, color: "#0F6E56", fontSize: 11, fontWeight: 500 }}>
+          Parasite molecule candidate
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default function App() {
+  const [selectedId, setSelectedId] = useState(null);
+  const [filterArea, setFilterArea] = useState("All");
+  const [filterParasite, setFilterParasite] = useState("All");
+  const [sortBy, setSortBy] = useState("composite");
+
+  const filtered = useMemo(() => {
+    let list = INDICATIONS;
+    if (filterArea !== "All") list = list.filter(d => d.area === filterArea);
+    if (filterParasite === "yes") list = list.filter(d => d.parasite);
+    if (filterParasite === "no") list = list.filter(d => !d.parasite);
+    return list;
+  }, [filterArea, filterParasite]);
+
+  const sorted = useMemo(() => {
+    return [...filtered].sort((a, b) => {
+      if (sortBy === "composite") return COMPOSITE(b) - COMPOSITE(a);
+      if (sortBy === "eff") return b.eff - a.eff;
+      if (sortBy === "pip") return a.pip - b.pip;
+      return 0;
+    });
+  }, [filtered, sortBy]);
+
+  const selected = useMemo(() => INDICATIONS.find(d => d.id === selectedId), [selectedId]);
+
+  const chartData = filtered.map(d => ({
+    ...d,
+    x: d.eff,
+    y: 7 - d.pip,
+    z: d.pre * 10 + 20,
+  }));
+
+  const parasiteCount = filtered.filter(d => d.parasite).length;
+
+  return (
+    <div style={{ fontFamily: "var(--font-sans)", color: "var(--color-text-primary)", padding: "1.5rem 0" }}>
+      <h2 className="sr-only">Autoimmune White Space Explorer — parasite-derived immunomodulatory molecule candidates mapped to high-unmet-need indications</h2>
+
+      <div style={{ marginBottom: "1.5rem" }}>
+        <div style={{ fontSize: 11, color: "var(--color-text-secondary)", letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: 4 }}>
+          Built on Convoke Unmet Needs Index · Parasite Immunomodulation Layer
+        </div>
+        <div style={{ fontSize: 22, fontWeight: 500, marginBottom: 6 }}>Autoimmune white space explorer</div>
+        <div style={{ fontSize: 14, color: "var(--color-text-secondary)", lineHeight: 1.6, maxWidth: 580 }}>
+          {filtered.length} autoimmune indications scored by residual efficacy gap vs. pipeline activity.
+          {" "}<span style={{ color: COLORS.parasite, fontWeight: 500 }}>{parasiteCount} have parasite-derived molecule candidates</span> from the literature — each a potential non-obvious drug target surfaced by evolutionary biology.
+        </div>
+      </div>
+
+      <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginBottom: "1.25rem", alignItems: "center" }}>
+        <select
+          value={filterArea}
+          onChange={e => { setFilterArea(e.target.value); setSelectedId(null); }}
+          style={{ fontSize: 13, padding: "6px 10px" }}
+        >
+          <option value="All">All therapeutic areas</option>
+          {AREAS.map(a => <option key={a} value={a}>{a}</option>)}
+        </select>
+
+        <select
+          value={filterParasite}
+          onChange={e => { setFilterParasite(e.target.value); setSelectedId(null); }}
+          style={{ fontSize: 13, padding: "6px 10px" }}
+        >
+          <option value="All">All indications</option>
+          <option value="yes">Parasite candidate only</option>
+          <option value="no">No candidate yet</option>
+        </select>
+
+        <select
+          value={sortBy}
+          onChange={e => setSortBy(e.target.value)}
+          style={{ fontSize: 13, padding: "6px 10px" }}
+        >
+          <option value="composite">Sort: composite score</option>
+          <option value="eff">Sort: efficacy gap</option>
+          <option value="pip">Sort: lowest pipeline</option>
+        </select>
+
+        <div style={{ display: "flex", alignItems: "center", gap: 12, marginLeft: "auto", fontSize: 12, color: "var(--color-text-secondary)" }}>
+          <span style={{ display: "flex", alignItems: "center", gap: 5 }}>
+            <span style={{ width: 10, height: 10, borderRadius: "50%", background: COLORS.parasite, display: "inline-block" }} />
+            Parasite candidate
+          </span>
+          <span style={{ display: "flex", alignItems: "center", gap: 5 }}>
+            <span style={{ width: 10, height: 10, borderRadius: "50%", background: COLORS.noParasite, display: "inline-block" }} />
+            No candidate yet
+          </span>
+        </div>
+      </div>
+
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 340px", gap: "1rem", marginBottom: "1.5rem" }}>
+        <div style={{ border: "0.5px solid var(--color-border-tertiary)", borderRadius: "var(--border-radius-lg)", padding: "1rem" }}>
+          <div style={{ fontSize: 12, color: "var(--color-text-secondary)", marginBottom: "0.75rem" }}>
+            X axis — residual efficacy gap (EFF) · Y axis — unmet pipeline space (7 − PIP) · Bubble size — prevalence
+          </div>
+          <div style={{ position: "relative", width: "100%", height: 300 }}>
+            <canvas id="scatter-accessible" role="img" aria-label="Scatter chart showing autoimmune indications by efficacy gap versus pipeline space" style={{ display: "none" }} />
+            <ResponsiveContainer width="100%" height="100%">
+              <ScatterChart margin={{ top: 10, right: 10, bottom: 20, left: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border-tertiary)" />
+                <XAxis
+                  type="number" dataKey="x" domain={[3, 8]}
+                  label={{ value: "Efficacy gap (EFF)", position: "insideBottom", offset: -8, fontSize: 11, fill: "#888780" }}
+                  tick={{ fontSize: 11, fill: "#888780" }}
+                />
+                <YAxis
+                  type="number" dataKey="y" domain={[0, 7]}
+                  label={{ value: "Pipeline space", angle: -90, position: "insideLeft", offset: 12, fontSize: 11, fill: "#888780" }}
+                  tick={{ fontSize: 11, fill: "#888780" }}
+                />
+                <ZAxis type="number" dataKey="z" range={[60, 400]} />
+                <Tooltip content={<CustomTooltip />} />
+                <Scatter data={chartData} onClick={(d) => setSelectedId(d.id === selectedId ? null : d.id)}>
+                  {chartData.map(d => (
+                    <Cell
+                      key={d.id}
+                      fill={d.id === selectedId ? COLORS.selected : d.parasite ? COLORS.parasite : COLORS.noParasite}
+                      fillOpacity={selectedId && d.id !== selectedId ? 0.3 : 0.85}
+                      style={{ cursor: "pointer" }}
+                    />
+                  ))}
+                </Scatter>
+              </ScatterChart>
+            </ResponsiveContainer>
+          </div>
+          <div style={{ fontSize: 11, color: "var(--color-text-secondary)", textAlign: "center", marginTop: 4 }}>
+            Top-right quadrant = highest unmet need + lowest competitive pipeline. Click any bubble to inspect.
+          </div>
+        </div>
+
+        <div style={{ border: "0.5px solid var(--color-border-tertiary)", borderRadius: "var(--border-radius-lg)", padding: "1rem", minHeight: 360 }}>
+          {selected ? (
+            <div>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "0.75rem" }}>
+                <div>
+                  <div style={{ fontSize: 11, color: "var(--color-text-secondary)", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 3 }}>{selected.area}</div>
+                  <div style={{ fontSize: 15, fontWeight: 500, lineHeight: 1.3 }}>{selected.condition}</div>
+                </div>
+                <button
+                  onClick={() => setSelectedId(null)}
+                  style={{ fontSize: 18, padding: "2px 6px", border: "none", background: "none", cursor: "pointer", color: "var(--color-text-secondary)" }}
+                  aria-label="Close detail panel"
+                >×</button>
+              </div>
+
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0 1rem", marginBottom: "0.75rem" }}>
+                <ScoreRow label="Efficacy gap" value={selected.eff} color="#1D9E75" />
+                <ScoreRow label="Prevalence" value={selected.pre} color="#378ADD" />
+                <ScoreRow label="Safety burden" value={selected.saf} color="#D85A30" />
+                <ScoreRow label="Pipeline" value={selected.pip} color="#BA7517" />
+              </div>
+
+              <div style={{ fontSize: 11, color: "var(--color-text-secondary)", marginBottom: 4 }}>Current standard of care</div>
+              <div style={{ fontSize: 12, color: "var(--color-text-primary)", lineHeight: 1.5, marginBottom: "0.75rem", padding: "8px 10px", background: "var(--color-background-secondary)", borderRadius: "var(--border-radius-md)" }}>
+                {selected.currentSoC}
+              </div>
+
+              {selected.parasite ? (
+                <div style={{ border: "0.5px solid #5DCAA5", borderRadius: "var(--border-radius-md)", padding: "10px 12px", background: "#E1F5EE" }}>
+                  <div style={{ fontSize: 11, fontWeight: 500, color: "#0F6E56", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 6 }}>
+                    Parasite molecule candidate
+                  </div>
+                  <div style={{ fontSize: 13, fontWeight: 500, color: "#085041", marginBottom: 2 }}>{selected.parasiteMolecule}</div>
+                  <div style={{ fontSize: 11, color: "#0F6E56", marginBottom: 8, fontStyle: "italic" }}>from {selected.parasiteParasite}</div>
+                  <div style={{ fontSize: 12, color: "#085041", lineHeight: 1.5, marginBottom: 8 }}>
+                    <span style={{ fontWeight: 500 }}>Mechanism: </span>{selected.parasiteMechanism}
+                  </div>
+                  <div style={{ fontSize: 12, color: "#085041", lineHeight: 1.5, marginBottom: 8 }}>
+                    <span style={{ fontWeight: 500 }}>Evidence: </span>{selected.parasiteEvidence}
+                  </div>
+                  <a
+                    href={selected.parasiteRef}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{ fontSize: 11, color: "#0F6E56", textDecoration: "underline" }}
+                  >
+                    View reference →
+                  </a>
+                </div>
+              ) : (
+                <div style={{ border: "0.5px solid var(--color-border-tertiary)", borderRadius: "var(--border-radius-md)", padding: "10px 12px", background: "var(--color-background-secondary)" }}>
+                  <div style={{ fontSize: 12, color: "var(--color-text-secondary)", lineHeight: 1.5 }}>
+                    <span style={{ fontWeight: 500, color: "var(--color-text-primary)" }}>No parasite candidate mapped yet. </span>
+                    {selected.whyExciting}
+                  </div>
+                </div>
+              )}
+            </div>
+          ) : (
+            <div style={{ display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", height: "100%", minHeight: 300, color: "var(--color-text-secondary)", textAlign: "center", gap: 8 }}>
+              <i className="ti ti-cursor-text" style={{ fontSize: 28 }} aria-hidden="true" />
+              <div style={{ fontSize: 13 }}>Click a bubble or row<br />to inspect the indication</div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      <div style={{ border: "0.5px solid var(--color-border-tertiary)", borderRadius: "var(--border-radius-lg)", overflow: "hidden" }}>
+        <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13, tableLayout: "fixed" }}>
+          <thead>
+            <tr style={{ background: "var(--color-background-secondary)" }}>
+              <th style={{ padding: "10px 14px", textAlign: "left", fontWeight: 500, fontSize: 11, color: "var(--color-text-secondary)", textTransform: "uppercase", letterSpacing: "0.06em", width: "34%" }}>Indication</th>
+              <th style={{ padding: "10px 8px", textAlign: "center", fontWeight: 500, fontSize: 11, color: "var(--color-text-secondary)", textTransform: "uppercase", letterSpacing: "0.06em", width: "10%" }}>EFF</th>
+              <th style={{ padding: "10px 8px", textAlign: "center", fontWeight: 500, fontSize: 11, color: "var(--color-text-secondary)", textTransform: "uppercase", letterSpacing: "0.06em", width: "10%" }}>PRE</th>
+              <th style={{ padding: "10px 8px", textAlign: "center", fontWeight: 500, fontSize: 11, color: "var(--color-text-secondary)", textTransform: "uppercase", letterSpacing: "0.06em", width: "10%" }}>PIP</th>
+              <th style={{ padding: "10px 8px", textAlign: "center", fontWeight: 500, fontSize: 11, color: "var(--color-text-secondary)", textTransform: "uppercase", letterSpacing: "0.06em", width: "12%" }}>Score</th>
+              <th style={{ padding: "10px 14px", textAlign: "left", fontWeight: 500, fontSize: 11, color: "var(--color-text-secondary)", textTransform: "uppercase", letterSpacing: "0.06em", width: "24%" }}>Parasite candidate</th>
+            </tr>
+          </thead>
+          <tbody>
+            {sorted.map((d, i) => {
+              const score = COMPOSITE(d).toFixed(2);
+              const isSelected = d.id === selectedId;
+              return (
+                <tr
+                  key={d.id}
+                  onClick={() => setSelectedId(d.id === selectedId ? null : d.id)}
+                  style={{
+                    borderTop: "0.5px solid var(--color-border-tertiary)",
+                    background: isSelected ? "var(--color-background-secondary)" : "transparent",
+                    cursor: "pointer",
+                  }}
+                  onMouseEnter={e => { if (!isSelected) e.currentTarget.style.background = "var(--color-background-secondary)"; }}
+                  onMouseLeave={e => { if (!isSelected) e.currentTarget.style.background = "transparent"; }}
+                >
+                  <td style={{ padding: "10px 14px" }}>
+                    <div style={{ fontWeight: isSelected ? 500 : 400 }}>{d.condition}</div>
+                    <div style={{ fontSize: 11, color: "var(--color-text-secondary)", marginTop: 1 }}>{d.area} · {d.prevalence}</div>
+                  </td>
+                  <td style={{ padding: "10px 8px", textAlign: "center" }}>
+                    <span style={{
+                      display: "inline-block", padding: "2px 7px", borderRadius: 4,
+                      background: d.eff >= 6 ? "#E1F5EE" : d.eff >= 5 ? "#FAEEDA" : "var(--color-background-secondary)",
+                      color: d.eff >= 6 ? "#0F6E56" : d.eff >= 5 ? "#854F0B" : "var(--color-text-primary)",
+                      fontWeight: 500, fontSize: 12
+                    }}>{d.eff}</span>
+                  </td>
+                  <td style={{ padding: "10px 8px", textAlign: "center", color: "var(--color-text-primary)" }}>{d.pre}</td>
+                  <td style={{ padding: "10px 8px", textAlign: "center" }}>
+                    <span style={{
+                      display: "inline-block", padding: "2px 7px", borderRadius: 4,
+                      background: d.pip <= 3 ? "#FAECE7" : "var(--color-background-secondary)",
+                      color: d.pip <= 3 ? "#993C1D" : "var(--color-text-primary)",
+                      fontWeight: d.pip <= 3 ? 500 : 400, fontSize: 12
+                    }}>{d.pip}</span>
+                  </td>
+                  <td style={{ padding: "10px 8px", textAlign: "center", fontWeight: 500 }}>{score}</td>
+                  <td style={{ padding: "10px 14px" }}>
+                    {d.parasite ? (
+                      <span style={{ fontSize: 11, color: "#0F6E56", fontWeight: 500, display: "flex", alignItems: "center", gap: 4 }}>
+                        <span style={{ width: 6, height: 6, borderRadius: "50%", background: COLORS.parasite, display: "inline-block", flexShrink: 0 }} />
+                        {d.parasiteMolecule}
+                      </span>
+                    ) : (
+                      <span style={{ fontSize: 11, color: "var(--color-text-secondary)" }}>—</span>
+                    )}
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+
+      <div style={{ marginTop: "1rem", fontSize: 11, color: "var(--color-text-secondary)", lineHeight: 1.6 }}>
+        Scores adapted from Convoke Unmet Needs Index methodology (EFF 55%, PRE 25%, PIP 10%, SAF 5%, CON 5%). Parasite molecule data sourced from primary literature (PubMed, Frontiers in Immunology, Scientific Reports). This is a research prototype demonstrating how Convoke's index can be augmented with orthogonal biomedical signals.
+      </div>
+    </div>
+  );
+}

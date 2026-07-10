@@ -1,0 +1,7 @@
+interface:
+  display_name: "Parasite Target Search"
+  short_description: "Find parasite molecules for ranked targets"
+  default_prompt: "Use $parasite-target-search to scan ranked disease targets for parasite-derived molecule evidence and summarize curation-ready hits."
+policy:
+  allow_implicit_invocation: true
+

@@ -1,0 +1,125 @@
+[
+  {
+    "disease_name": "graft versus host disease",
+    "disease_id": "MONDO_0013730",
+    "top_targets": [
+      {
+        "target_name": "FKBP prolyl isomerase 1A",
+        "target_id": "ENSG00000088832",
+        "score": 0.5399705506854445,
+        "rank": 1,
+        "swissprot_id": "P62942"
+      },
+      {
+        "target_name": "Janus kinase 1",
+        "target_id": "ENSG00000162434",
+        "score": 0.5372879669579735,
+        "rank": 2,
+        "swissprot_id": "P23458"
+      },
+      {
+        "target_name": "Janus kinase 2",
+        "target_id": "ENSG00000096968",
+        "score": 0.5293267495454332,
+        "rank": 3,
+        "swissprot_id": "O60674"
+      },
+      {
+        "target_name": "Rho associated coiled-coil containing protein kinase 2",
+        "target_id": "ENSG00000134318",
+        "score": 0.524728163372998,
+        "rank": 4,
+        "swissprot_id": "O75116"
+      },
+      {
+        "target_name": "Rho associated coiled-coil containing protein kinase 1",
+        "target_id": "ENSG00000067900",
+        "score": 0.5234901716796979,
+        "rank": 5,
+        "swissprot_id": "Q13464"
+      }
+    ]
+  },
+  {
+    "disease_name": "dermatomyositis",
+    "disease_id": "EFO_0000398",
+    "top_targets": [
+      {
+        "target_name": "nuclear receptor subfamily 3 group C member 1",
+        "target_id": "ENSG00000113580",
+        "score": 0.5340839544476923,
+        "rank": 1,
+        "swissprot_id": "P04150"
+      },
+      {
+        "target_name": "Janus kinase 1",
+        "target_id": "ENSG00000162434",
+        "score": 0.34891052075541223,
+        "rank": 2,
+        "swissprot_id": "P23458"
+      },
+      {
+        "target_name": "Janus kinase 2",
+        "target_id": "ENSG00000096968",
+        "score": 0.2988477115347994,
+        "rank": 3,
+        "swissprot_id": "O60674"
+      },
+      {
+        "target_name": "tyrosine kinase 2",
+        "target_id": "ENSG00000105397",
+        "score": 0.2935460597113938,
+        "rank": 4,
+        "swissprot_id": "P29597"
+      },
+      {
+        "target_name": "mitochondrial ribosomal protein S9",
+        "target_id": "ENSG00000135972",
+        "score": 0.2724196478310225,
+        "rank": 5,
+        "swissprot_id": "P82933"
+      }
+    ]
+  },
+  {
+    "disease_name": "adult-onset Still's disease",
+    "disease_id": "EFO_0007135",
+    "top_targets": [
+      {
+        "target_name": "interleukin 1 beta",
+        "target_id": "ENSG00000125538",
+        "score": 0.35566045689473724,
+        "rank": 1,
+        "swissprot_id": "P01584"
+      },
+      {
+        "target_name": "interleukin 1 receptor type 1",
+        "target_id": "ENSG00000115594",
+        "score": 0.3340643085907448,
+        "rank": 2,
+        "swissprot_id": "P14778"
+      },
+      {
+        "target_name": "colony stimulating factor 1",
+        "target_id": "ENSG00000184371",
+        "score": 0.28169261006990803,
+        "rank": 3,
+        "swissprot_id": "P09603"
+      },
+      {
+        "target_name": "interleukin 18",
+        "target_id": "ENSG00000150782",
+        "score": 0.13517992723581718,
+        "rank": 4,
+        "swissprot_id": "Q14116"
+      },
+      {
+        "target_name": "programmed cell death 6 interacting protein",
+        "target_id": "ENSG00000170248",
+        "score": 0.13413929359084642,
+        "rank": 5,
+        "swissprot_id": "Q8WUM4"
+      }
+    ]
+  }
+]

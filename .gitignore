@@ -1,0 +1,12 @@
+.DS_Store
+**/.DS_Store
+**/.next/
+**/.vercel/
+**/node_modules/
+**/__pycache__/
+**/*.pyc
+**/tsconfig.tsbuildinfo
+
+# HPIDB source files exceed GitHub's normal file-size limit.
+python/data/inputs/hpidb2.mitab/
+
