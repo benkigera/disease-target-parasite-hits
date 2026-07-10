@@ -7,7 +7,7 @@ ROOT = Path(__file__).resolve().parent
 DISEASE_TARGET_PATH = ROOT / "data/outputs/disease_target_map.json"
 HPIDB_PATH = ROOT / "data/inputs/hpidb2.mitab/hpidb2.mitab_plus.txt"
 OUTPUT_PATH = ROOT / "data/outputs/disease_target_pathogen_map.json"
-APP_OUTPUT_PATH = ROOT.parent / "my-app/data/disease_target_pathogen_map.json"
+APP_OUTPUT_PATH = ROOT.parent / "parasite-target-atlas/data/disease_target_pathogen_map.json"
 
 disease_list = json.loads(DISEASE_TARGET_PATH.read_text())
 
