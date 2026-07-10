@@ -112,6 +112,7 @@ def fetch_hits_for_a_single_target(columns, target_uniprot_ids):
         pathogen_id = protein_b
         pathogen_taxid = taxid_b
         pathogen_name = columns[25]
+        pathogen_source_organism = columns[20]
         pathogen_kingdom = kingdom_b
 
     elif taxid_b == "9606" and taxid_a != "9606":
@@ -119,6 +120,7 @@ def fetch_hits_for_a_single_target(columns, target_uniprot_ids):
         pathogen_id = protein_a
         pathogen_taxid = taxid_a
         pathogen_name = columns[24]
+        pathogen_source_organism = columns[19]
         pathogen_kingdom = kingdom_a
 
     else:
@@ -134,6 +136,7 @@ def fetch_hits_for_a_single_target(columns, target_uniprot_ids):
 
     pathogen_hit = {
         "pathogen_molecule": pathogen_name,
+        "pathogen_source_organism": pathogen_source_organism,
         "pathogen_id": pathogen_id,
         "pathogen_taxid": pathogen_taxid,
         "pathogen_kingdom": pathogen_kingdom,
