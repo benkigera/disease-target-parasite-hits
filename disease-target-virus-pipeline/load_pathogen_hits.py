@@ -83,10 +83,10 @@ def collect_pathogen_hits_by_targets(target_uniprot_ids):
         pair_evidence = evidence_by_pair[(host_id, pathogen_id)]
         evidence_tier = classify_evidence_tier(pathogen_hit, pair_evidence)
         pathogen_hit["evidence_tier"] = evidence_tier
-        pathogen_hit["counted_for_viral_rank"] = evidence_tier in {"A", "B"}
+        pathogen_hit["counted_for_viral_rank"] = evidence_tier == "A"
 
-        # Rank only with the most defensible direct-binding/direct-interaction
-        # evidence. Lower-tier rows are excluded from the atlas counts for now.
+        # Experimental mode: keep only the most defensible structural or
+        # quantitative direct-interaction evidence in the atlas counts.
         if pathogen_hit["counted_for_viral_rank"]:
             hits.setdefault(host_id, []).append(pathogen_hit)
 
