@@ -1,5 +1,3 @@
-# load diseases
-
 import json
 from pathlib import Path
 
@@ -22,13 +20,7 @@ target_uniprot_ids = {
 
 
 def main():
-    # print(json.dumps(target_uniprot_ids, indent=2))
-
     hits_by_target = collect_pathogen_hits_by_targets(target_uniprot_ids)
-    # print(json.dumps(hits_by_target, indent=2))
-
-    # add pathogen hits back into each target
-    #
     for disease in disease_list:
         for target in disease["top_targets"]:
             target_id = target.get("uniprot_swissprot")
@@ -50,53 +42,22 @@ def main():
 
 def collect_pathogen_hits_by_targets(target_uniprot_ids):
     hits = {}
-    candidate_rows = []
-    evidence_by_pair = {}
 
-    # break into lines (one interaction row ...)
-    #
-    for line in (
-        HPIDB_PATH
-        .read_text(encoding="utf-8", errors="replace")
-        .splitlines()
-    ):
-        columns = line.split("\t")
-
-        results = fetch_hits_for_a_single_target(columns, target_uniprot_ids)
-
-        if results:
-            host_id, pathogen_id, pathogen_hit = results
-            candidate_rows.append((host_id, pathogen_id, pathogen_hit))
-            pair_key = (host_id, pathogen_id)
-            pair_evidence = evidence_by_pair.setdefault(
-                pair_key,
-                {"publication_ids": set(), "detection_methods": set()},
+    with HPIDB_PATH.open(encoding="utf-8", errors="replace") as rows:
+        for line in rows:
+            result = fetch_tier_a_viral_hit(
+                line.rstrip("\r\n").split("\t"), target_uniprot_ids
             )
-            pair_evidence["publication_ids"].update(
-                pathogen_hit["publication_ids"]
-            )
-            pair_evidence["detection_methods"].add(
-                pathogen_hit["detection_method"]
-            )
-
-    for host_id, pathogen_id, pathogen_hit in candidate_rows:
-        pair_evidence = evidence_by_pair[(host_id, pathogen_id)]
-        evidence_tier = classify_evidence_tier(pathogen_hit, pair_evidence)
-        pathogen_hit["evidence_tier"] = evidence_tier
-        pathogen_hit["counted_for_viral_rank"] = evidence_tier == "A"
-
-        # Experimental mode: keep only the most defensible structural or
-        # quantitative direct-interaction evidence in the atlas counts.
-        if pathogen_hit["counted_for_viral_rank"]:
-            hits.setdefault(host_id, []).append(pathogen_hit)
+            if result:
+                host_id, pathogen_hit = result
+                hits.setdefault(host_id, []).append(pathogen_hit)
 
     return hits
 
 
-def fetch_hits_for_a_single_target(columns, target_uniprot_ids):
-
+def fetch_tier_a_viral_hit(columns, target_uniprot_ids):
     if len(columns) <= 25:
-        return ""
+        return None
 
     protein_a = columns[15].split(":")[-1]
     protein_b = columns[16].split(":")[-1]
@@ -124,15 +85,18 @@ def fetch_hits_for_a_single_target(columns, target_uniprot_ids):
         pathogen_kingdom = kingdom_a
 
     else:
-        return ""
+        return None
 
     # keep only viral pathogen hits
     if pathogen_kingdom != "VIRUS":
-        return ""
+        return None
 
     # make sure to only record hits related to our project / targets
     if host_id not in target_uniprot_ids:
-        return ""
+        return None
+
+    if not is_tier_a_evidence(columns[6], columns[11]):
+        return None
 
     pathogen_hit = {
         "pathogen_molecule": pathogen_name,
@@ -145,9 +109,10 @@ def fetch_hits_for_a_single_target(columns, target_uniprot_ids):
         "source_database": columns[23],
         "confidence": columns[14],
         "publication_ids": extract_publication_ids(columns[8]),
+        "evidence_tier": "A",
     }
 
-    return host_id, pathogen_id, pathogen_hit
+    return host_id, pathogen_hit
 
 
 def extract_publication_ids(publication_column):
@@ -158,20 +123,9 @@ def extract_publication_ids(publication_column):
     ]
 
 
-def classify_evidence_tier(pathogen_hit, pair_evidence):
-    detection_method = pathogen_hit["detection_method"].lower()
-    interaction_type = pathogen_hit["interaction_type"].lower()
-
-    is_direct_interaction = "direct interaction" in interaction_type
-    is_high_throughput_like = any(
-        term in detection_method
-        for term in (
-            "array",
-            "pooling",
-            "interactome parallel affinity capture",
-        )
-    )
-    is_quantitative_or_structural = any(
+def is_tier_a_evidence(detection_method, interaction_type):
+    detection_method = detection_method.lower()
+    return "direct interaction" in interaction_type.lower() and any(
         term in detection_method
         for term in (
             "x-ray crystallography",
@@ -183,21 +137,6 @@ def classify_evidence_tier(pathogen_hit, pair_evidence):
             "hydrogen/deuterium exchange",
         )
     )
-    is_replicated = (
-        len(pair_evidence["publication_ids"]) >= 2
-        or len(pair_evidence["detection_methods"]) >= 2
-    )
-
-    if is_direct_interaction and is_quantitative_or_structural:
-        return "A"
-
-    if is_direct_interaction and is_replicated and not is_high_throughput_like:
-        return "B"
-
-    if is_direct_interaction and not is_high_throughput_like:
-        return "C"
-
-    return "D"
 
 
 def add_viral_informed_target_rank(diseases):
@@ -248,4 +187,5 @@ def add_viral_informed_target_rank(diseases):
         disease["top_targets"] = ranked_targets
 
 
-main()
+if __name__ == "__main__":
+    main()

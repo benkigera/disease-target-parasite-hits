@@ -1,4 +1,3 @@
-# load disease ids
 import json
 from pathlib import Path
 
@@ -10,6 +9,26 @@ OUTPUT_PATH = ROOT / "data/outputs/disease_target_map.json"
 TARGETS_PER_DISEASE = 100
 
 disease_ids = json.loads(INPUT_PATH.read_text())
+
+QUERY = """
+query TopDiseaseTargets($disease_id: String!, $target_limit: Int!) {
+  disease(efoId: $disease_id) {
+    id
+    name
+    associatedTargets(page: {index: 0, size: $target_limit}) {
+      rows {
+        score
+        target {
+          approvedName
+          approvedSymbol
+          id
+          proteinIds { id source }
+        }
+      }
+    }
+  }
+}
+"""
 
 
 def main():
@@ -38,29 +57,6 @@ def main():
 
 
 def fetch_top_targets(disease_id):
-    query_string = """
-    query MyQuery($disease_id: String!, $target_limit: Int!) {
-      disease(efoId: $disease_id) {
-        id
-        name
-        associatedTargets(page: {index: 0, size: $target_limit}) {
-          rows {
-            score
-            target {
-              approvedName
-              approvedSymbol
-              id
-              proteinIds {
-                id
-                source
-              }
-            }
-          }
-        }
-      }
-    }
-    """
-
     variables = {
         "disease_id": disease_id,
         "target_limit": TARGETS_PER_DISEASE,
@@ -70,7 +66,7 @@ def fetch_top_targets(disease_id):
 
     r = requests.post(
         base_url,
-        json={"query": query_string, "variables": variables},
+        json={"query": QUERY, "variables": variables},
         timeout=60,
     )
     r.raise_for_status()
@@ -114,4 +110,5 @@ def fetch_top_targets(disease_id):
     }
 
 
-main()
+if __name__ == "__main__":
+    main()

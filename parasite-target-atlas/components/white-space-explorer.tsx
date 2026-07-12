@@ -1,15 +1,20 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { TargetExplorerPanel } from "@/components/disease-target-explorer";
+import {
+  TargetExplorerPanel,
+  type EnhancedTarget,
+  type TargetExplorerData,
+} from "@/components/disease-target-explorer";
 import {
   compositeScore,
+  indications as baseIndications,
   IMMUNOLOGY_RECORD_COUNT,
   SOURCE_IMMUNOLOGY_RECORD_COUNT,
   SOURCE_URL,
+  type ConvokeImmunologyRecord,
 } from "@/lib/indications";
 import diseaseTargetPathogenMap from "@/data/disease_target_pathogen_map.json";
-import { enhancedIndications as staticIndications, type EnhancedIndication } from "@/lib/enhanced_indications";
 import { ConvokeChrome } from "@/components/convoke-chrome";
 import { FilterBar, type SearchSuggestion } from "@/components/filter-bar";
 import {
@@ -48,34 +53,25 @@ type PipelineDiseaseTargetMap = {
   }[];
 };
 
-const pipelineDiseaseMap = diseaseTargetPathogenMap as PipelineDiseaseTargetMap[];
+type AtlasIndication = ConvokeImmunologyRecord & {
+  openTargetsDiseaseId?: string;
+  targetExplorer?: TargetExplorerData;
+};
 
-const staticTargetsById = new Map(
-  staticIndications.flatMap((indication) =>
-    indication.targetExplorer?.topTargets.map((target) => [target.targetId, target]) ?? []
-  )
+const pipelineDiseasesByName = new Map(
+  (diseaseTargetPathogenMap as PipelineDiseaseTargetMap[]).map((disease) => [
+    disease.disease_name.toLowerCase(),
+    disease,
+  ])
 );
 
-const indications = staticIndications.map((indication): EnhancedIndication => {
-  const pipelineDisease = pipelineDiseaseMap.find(
-    (disease) =>
-      disease.disease_id === indication.openTargetsDiseaseId ||
-      disease.disease_name.toLowerCase() === indication.name.toLowerCase()
-  );
-
+const indications: AtlasIndication[] = baseIndications.map((indication) => {
+  const pipelineDisease = pipelineDiseasesByName.get(indication.name.toLowerCase());
   if (!pipelineDisease) return indication;
 
-  const oldTargetsById = new Map(
-    indication.targetExplorer?.topTargets.map((target) => [target.targetId, target]) ?? []
-  );
-
-  const topTargets = pipelineDisease.top_targets.map((target) => {
-    const oldTarget = oldTargetsById.get(target.id);
-    const staticTarget = oldTarget ?? staticTargetsById.get(target.id);
-
-    return {
+  const topTargets: EnhancedTarget[] = pipelineDisease.top_targets.map((target) => ({
       targetId: target.id,
-      symbol: target.approved_symbol ?? staticTarget?.symbol ?? target.id,
+      symbol: target.approved_symbol ?? target.id,
       approvedName: target.approved_name,
       openTargetsRank: target.open_target_rank,
       associationScore: target.association_score,
@@ -94,8 +90,7 @@ const indications = staticIndications.map((indication): EnhancedIndication => {
         sourceDatabase: hit.source_database ?? null,
         confidenceScore: hit.confidence ?? null,
       })),
-    };
-  });
+  }));
 
   const viralRerankedTargets = [...topTargets].sort(
     (a, b) => a.viralInformedRank - b.viralInformedRank
