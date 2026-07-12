@@ -518,18 +518,18 @@
         <div class="page" id="main">
             <header class="page-header">
                 <span class="page-label">technical notes</span>
-                <h1>Disease → Target → Pathogen-Hit Map</h1>
+                <h1>Autoimmune Disease → Target → Tier A Viral-Hit Map</h1>
                 <p class="page-desc">
-                    Given a list of diseases our goal is to find their top 100
-                    associated targets from the Open Targets API, map each target
-                    to a UniProt Swiss-Prot ID, then check whether those host
-                    proteins are interacting with any pathogens in HPIDB.
+                    Start with the curated autoimmune disease IDs, fetch the top
+                    100 associated targets from Open Targets, map each target to
+                    UniProt Swiss-Prot, then retain only direct viral interactions
+                    supported by the pipeline's strict Tier A assay criteria.
                 </p>
 
                 <div class="pipeline">
                     <div class="pipeline-chip">
                         <span class="chip-label">input</span>
-                        disease ID list
+                        current autoimmune disease IDs
                     </div>
                     <div class="pipeline-arrow"></div>
                     <div class="pipeline-chip">
@@ -543,15 +543,15 @@
                     </div>
                     <div class="pipeline-arrow"></div>
                     <div class="pipeline-chip">
-                        <span class="chip-label">step 7–11</span>
-                        disease → target → pathogen-hit map
+                        <span class="chip-label">step 7–10</span>
+                        Tier A viral hits → frequency rank → atlas JSON
                     </div>
                 </div>
 
                 <div class="pipeline-note">
-                    Open Targets scores and ranks targets through their genetic
-                    association data. UniProt is the bridge that lets Open
-                    Targets and HPIDB talk to each other.
+                    Current output: 35 resolved diseases, 3,275 targets, and 686
+                    Tier A viral interaction rows. The two obsolete non-disease
+                    IDs were removed and 25 older ontology IDs were migrated.
                 </div>
             </header>
 
@@ -563,12 +563,15 @@
                         <div class="spine-line"></div>
                     </div>
                     <div class="step-body">
-                        <h2>Find the documentation</h2>
+                        <h2>Start from the curated input IDs</h2>
                         <p>
-                            Our first step is to create a disease → target map.
-                            Before writing any code, let's find out what Open
-                            Targets actually offers for querying disease-target
-                            associations.
+                            The source of truth is
+                            <code>data/inputs/disease_id.json</code>. Older EFO
+                            identifiers were replaced with their current MONDO
+                            terms using the recorded mapping in
+                            <code>disease_id_migrations.json</code>. The loader
+                            refuses to overwrite its output if any input disease
+                            is unresolved or has no associated targets.
                         </p>
                         <ul>
                             <li>
@@ -579,8 +582,9 @@
                             </li>
                         </ul>
                         <div class="takeaway">
-                            <strong>→</strong> Read the docs first. Know what
-                            fields are available before building the query.
+                            <strong>→</strong> ID migrations are explicit and
+                            auditable; unresolved conditions cannot silently
+                            disappear from a run.
                         </div>
                     </div>
                 </div>
@@ -607,11 +611,11 @@
                             variable and name our query something like
                             <code>fetch_top_targets</code>.
                         </p>
-                        <pre><code>query fetch_top_targets($disease_id: String!) {
+                        <pre><code>query fetch_top_targets($disease_id: String!, $target_limit: Int!) {
   disease(efoId: $disease_id) {
     id
     name
-    associatedTargets(page: { index: 0, size: 100 }) {
+    associatedTargets(page: { index: 0, size: $target_limit }) {
       rows {
         score
         target {
@@ -628,7 +632,7 @@
   }
 }</code></pre>
                         <p>Variables panel:</p>
-                        <pre><code>{ "disease_id": "EFO_0000398" }</code></pre>
+                        <pre><code>{ "disease_id": "MONDO_0016367" }</code></pre>
                         <div class="takeaway">
                             <strong>→</strong> <code>associatedTargets.rows</code>
                             is a list. Each row has a <code>score</code> and a
@@ -655,11 +659,11 @@
 OPEN_TARGETS_URL = "https://api.platform.opentargets.org/api/v4/graphql"
 
 fetch_top_targets_query = """
-query fetch_top_targets($disease_id: String!) {
+query fetch_top_targets($disease_id: String!, $target_limit: Int!) {
   disease(efoId: $disease_id) {
     id
     name
-    associatedTargets(page: { index: 0, size: 100 }) {
+    associatedTargets(page: { index: 0, size: $target_limit }) {
       rows {
         score
         target {
@@ -678,7 +682,10 @@ response = requests.post(
     OPEN_TARGETS_URL,
     json={
         "query": fetch_top_targets_query,
-        "variables": {"disease_id": "EFO_0000398"},
+        "variables": {
+            "disease_id": "MONDO_0016367",
+            "target_limit": 100,
+        },
     },
 )
 
@@ -707,14 +714,15 @@ print(data)</code></pre>
                         </p>
                         <pre><code>{
   "disease_name": "dermatomyositis",
-  "disease_id": "EFO_0000398",
+  "disease_id": "MONDO_0016367",
   "top_targets": [
     {
-      "target_name": "nuclear receptor subfamily 3 group C member 1",
-      "target_id": "ENSG00000113580",
-      "rank": 1,
-      "association_score": 0.534,
-      "uniprot_swissprot_id": "P04150"
+      "approved_name": "nuclear receptor subfamily 3 group C member 1",
+      "approved_symbol": "NR3C1",
+      "id": "ENSG00000113580",
+      "open_target_rank": 1,
+      "score": 0.534,
+      "uniprot_swissprot": "P04150"
     }
   ]
 }</code></pre>
@@ -727,17 +735,18 @@ print(data)</code></pre>
                         <pre><code>for rank, row in enumerate(rows, start=1):
     target = row["target"]
 
-    swissprot_ids = [
+    swissprot_id = next((
         p["id"] for p in target["proteinIds"]
         if p["source"] == "uniprot_swissprot"
-    ]
+    ), None)
 
     top_targets.append({
-        "target_name":        target["approvedName"],
-        "target_id":          target["id"],
-        "rank":               rank,
-        "association_score":  row["score"],
-        "uniprot_swissprot_id": swissprot_ids[0] if swissprot_ids else None,
+        "approved_name":      target["approvedName"],
+        "approved_symbol":    target["approvedSymbol"],
+        "id":                 target["id"],
+        "open_target_rank":   rank,
+        "score":              row["score"],
+        "uniprot_swissprot": swissprot_id,
     })</code></pre>
                         <div class="takeaway">
                             <strong>→</strong> Once this JSON exists, all later
@@ -786,10 +795,10 @@ diseases = json.loads(
                             HPIDB.
                         </p>
                         <pre><code>host_target_uniprot_ids = {
-    target["uniprot_swissprot_id"]
+    target["uniprot_swissprot"]
     for disease in diseases
     for target in disease["top_targets"]
-    if target.get("uniprot_swissprot_id")
+    if target.get("uniprot_swissprot")
 }</code></pre>
                         <div class="takeaway">
                             <strong>→</strong> A set gives us O(1) lookup later —
@@ -805,30 +814,22 @@ diseases = json.loads(
                         <div class="spine-line"></div>
                     </div>
                     <div class="step-body">
-                        <h2>Load HPIDB — read_text, split lines, delegate per-row logic</h2>
+                        <h2>Stream HPIDB and keep only qualifying rows</h2>
                         <p>
                             We'll then check HPIDB to see if our host targets
-                            are interacting with any pathogens. Instead of
-                            opening the file with a context manager, we use
-                            <code>read_text().splitlines()</code> to get all
-                            lines at once, then split each line on
-                            <code>\t</code> to get the columns. We delegate the
-                            per-row hit-finding logic to its own function to
-                            keep things clean.
+                            are interacting with viruses. The file is streamed
+                            one row at a time, so the whole MITAB dataset and a
+                            second candidate list are never held in memory.
                         </p>
-                        <pre><code>def collect_pathogen_hits_by_target(target_uniprot_ids):
+                        <pre><code>def collect_pathogen_hits_by_targets(target_uniprot_ids):
     hits = {}
-    for line in (
-        Path("data/input/hpidb2.mitab/hpidb2.mitab_plus.txt")
-        .read_text(encoding="utf-8", errors="replace")
-        .splitlines()
-    ):
-        columns = line.split("\t")
-
-        result = get_pathogen_hit_for_target(columns, target_uniprot_ids)
-        if result:
-            host_id, pathogen_hit = result
-            hits.setdefault(host_id, []).append(pathogen_hit)
+    with HPIDB_PATH.open(encoding="utf-8", errors="replace") as rows:
+        for line in rows:
+            columns = line.rstrip("\r\n").split("\t")
+            result = fetch_tier_a_viral_hit(columns, target_uniprot_ids)
+            if result:
+                host_id, pathogen_hit = result
+                hits.setdefault(host_id, []).append(pathogen_hit)
 
     return hits</code></pre>
                         <p>Every line comes back as a list of columns indexed from 0. Here's what each column contains — the ones we need are highlighted:</p>
@@ -876,7 +877,7 @@ diseases = json.loads(
                         <div class="spine-line"></div>
                     </div>
                     <div class="step-body">
-                        <h2>Parse each row — figure out which side is human</h2>
+                        <h2>Identify the human side, require virus, then require Tier A</h2>
                         <p>
                             Each interaction row has two proteins. MITAB
                             accessions look like <code>uniprotkb:P23458</code>
@@ -884,7 +885,7 @@ diseases = json.loads(
                             <code>taxid:9606(Homo sapiens)</code> — so we need
                             to parse out just the ID portion from each.
                         </p>
-                        <pre><code>def fetch_hits_for_a_single_target(columns, target_uniprot_ids):
+                        <pre><code>def fetch_tier_a_viral_hit(columns, target_uniprot_ids):
     # accessions are "uniprotkb:P23458" — split on ":" and take the last part
     protein_a = columns[15].split(":")[-1]
     protein_b = columns[16].split(":")[-1]
@@ -914,27 +915,40 @@ diseases = json.loads(
         pathogen_kingdom = kingdom_a
 
     else:
-        return ""  # human-human or pathogen-pathogen — skip
+        return None  # human-human or pathogen-pathogen
 
     # keep only viral pathogen hits
     if pathogen_kingdom != "VIRUS":
-        return ""
+        return None
 
     if host_id not in target_uniprot_ids:
-        return ""  # not one of our targets — skip
+        return None
+
+    if not is_tier_a_evidence(columns[6], columns[11]):
+        return None
 
     pathogen_hit = {
         "pathogen_molecule": pathogen_name,
         "pathogen_id": pathogen_id,
         "pathogen_taxid": pathogen_taxid,
         "pathogen_kingdom": pathogen_kingdom,
+        "detection_method": columns[6],
+        "interaction_type": columns[11],
+        "evidence_tier": "A",
     }
     return host_id, pathogen_hit</code></pre>
+                        <p>
+                            Tier A currently means a PSI-MI
+                            <code>direct interaction</code> whose detection method
+                            reports structural or quantitative evidence: X-ray
+                            crystallography/scattering, NMR, surface plasmon
+                            resonance, isothermal titration calorimetry, light
+                            scattering, or hydrogen/deuterium exchange.
+                        </p>
                         <div class="takeaway">
-                            <strong>→</strong> Whichever side is the pathogen, we
-                            grab its kingdom from column 17 or 18 and bail out
-                            unless it's <code>VIRUS</code> — so only viral
-                            interactions make it into the map.
+                            <strong>→</strong> B, C, D, non-viral, human-human,
+                            and out-of-scope target rows never enter
+                            <code>pathogen_hits</code> or any viral count.
                         </div>
                     </div>
                 </div>
@@ -964,11 +978,12 @@ diseases = json.loads(
 
     add_viral_informed_target_rank(disease_list)
 
-    Path("data/outputs/disease_target_pathogen_map.json").write_text(
-        json.dumps(disease_list, indent=2)
-    )
+    output = json.dumps(disease_list, indent=2)
+    OUTPUT_PATH.write_text(output)
+    APP_OUTPUT_PATH.write_text(output)
 
-main()</code></pre>
+if __name__ == "__main__":
+    main()</code></pre>
                         <div class="takeaway">
                             <strong>→</strong> Attaching the hits answers
                             <em>which</em> targets have viral evidence — the next
@@ -985,10 +1000,9 @@ main()</code></pre>
                     <div class="step-body">
                         <h2>Re-rank targets with the viral signal</h2>
                         <p>
-                            Open Targets ranks purely on genetic association. But
-                            now that we know which targets actually interact with
-                            viruses, we can nudge that ranking — a target with
-                            strong viral evidence should climb. That's what
+                            Open Targets provides the initial association order.
+                            The atlas's viral-informed view now ranks strictly by
+                            retained Tier A viral row frequency. That's what
                             <code>add_viral_informed_target_rank()</code> does,
                             per disease.
                         </p>
@@ -1012,10 +1026,10 @@ main()</code></pre>
     target["viral_source_taxa_count"]     = len(viral_source_taxa)
     target["supporting_interaction_count"] = len(pathogen_hits)</code></pre>
                         <p>
-                            Then we normalise each target's hit count against the
-                            busiest target in that disease, and add up to a
-                            <code>0.2</code> bonus on top of the association
-                            score — that's the <code>viral_informed_score</code>:
+                            Then we normalise each target's retained hit count
+                            against the busiest target in that disease. That
+                            frequency alone becomes
+                            <code>viral_informed_score</code>:
                         </p>
                         <pre><code>max_viral_hits = max(
     (t["viral_molecule_hit_count"] for t in targets),
@@ -1023,13 +1037,11 @@ main()</code></pre>
 )
 
 for target in targets:
-    viral_hit_bonus = (
+    viral_frequency = (
         target["viral_molecule_hit_count"] / max_viral_hits
         if max_viral_hits else 0
     )
-    target["viral_informed_score"] = (
-        target["association_score"] + 0.2 * viral_hit_bonus
-    )</code></pre>
+    target["viral_informed_score"] = viral_frequency</code></pre>
                         <p>
                             Finally we sort by that new score to assign a
                             <code>viral_informed_rank</code>, and record how many
@@ -1038,7 +1050,7 @@ for target in targets:
                         </p>
                         <pre><code>ranked_targets = sorted(
     targets,
-    key=lambda target: target["viral_informed_score"],
+    key=lambda target: target["viral_molecule_hit_count"],
     reverse=True,
 )
 
@@ -1046,12 +1058,10 @@ for viral_rank, target in enumerate(ranked_targets, start=1):
     target["viral_informed_rank"] = viral_rank
     target["rank_gain"] = target["open_target_rank"] - viral_rank</code></pre>
                         <div class="takeaway">
-                            <strong>→</strong> The bonus caps at
-                            <code>0.2</code>, so viral evidence can reshuffle the
-                            list without ever drowning out the genetic
-                            association. <code>rank_gain</code> makes the effect
-                            legible — a positive number means the virus data
-                            pushed that target up.
+                            <strong>→</strong> Open Targets order is retained as
+                            the stable tie-break because Python's sort is stable.
+                            A positive <code>rank_gain</code> means strict viral
+                            frequency moved the target above its original rank.
                         </div>
                     </div>
                 </div>
@@ -1066,8 +1076,9 @@ for viral_rank, target in enumerate(ranked_targets, start=1):
     "disease_name": "graft versus host disease",
     "top_targets": [
       {
-        "target_name": "Janus kinase 1",
-        "target_id": "ENSG00000162434",
+        "approved_name": "Janus kinase 1",
+        "approved_symbol": "JAK1",
+        "id": "ENSG00000162434",
         "open_target_rank": 1,
         "uniprot_swissprot": "P23458",
         "score": 0.5372879669579735,
@@ -1076,14 +1087,17 @@ for viral_rank, target in enumerate(ranked_targets, start=1):
             "pathogen_molecule": "NS1_I97A1",
             "pathogen_id": "O56264",
             "pathogen_taxid": "130763",
-            "pathogen_kingdom": "VIRUS"
+            "pathogen_kingdom": "VIRUS",
+            "detection_method": "psi-mi:MI:0107(surface plasmon resonance)",
+            "interaction_type": "psi-mi:MI:0407(direct interaction)",
+            "evidence_tier": "A"
           }
         ],
         "association_score": 0.5372879669579735,
         "viral_molecule_hit_count": 1,
         "viral_source_taxa_count": 1,
         "supporting_interaction_count": 1,
-        "viral_informed_score": 0.7372879669579735,
+        "viral_informed_score": 1.0,
         "viral_informed_rank": 1,
         "rank_gain": 0
       }
@@ -1098,8 +1112,12 @@ for viral_rank, target in enumerate(ranked_targets, start=1):
                     <h3>Inputs</h3>
                     <ul>
                         <li>
-                            <strong>data/input/disease_id.json</strong>
-                            Disease IDs to query
+                            <strong>data/inputs/disease_id.json</strong>
+                            Current autoimmune disease IDs to query
+                        </li>
+                        <li>
+                            <strong>data/inputs/disease_id_migrations.json</strong>
+                            Auditable old-ID → current-ID replacements
                         </li>
                         <li>
                             <strong>Open Targets GraphQL API</strong>
@@ -1121,18 +1139,22 @@ for viral_rank, target in enumerate(ranked_targets, start=1):
                         </li>
                         <li>
                             <strong>disease_target_pathogen_map.json</strong>
-                            Disease → target → pathogen-hit map
+                            Pipeline copy of the strict Tier A viral map
+                        </li>
+                        <li>
+                            <strong>parasite-target-atlas/data/disease_target_pathogen_map.json</strong>
+                            Identical copy consumed by the deployed atlas
                         </li>
                     </ul>
                 </div>
 
                 <div class="info-block">
-                    <h3>Debugging rules</h3>
+                    <h3>Run and verify</h3>
                     <ul>
-                        <li>If the value is a list, loop before using string keys</li>
-                        <li>Use <code>json.dumps(v, indent=2)</code> for readable output</li>
-                        <li>Do not print <code>None</code> for every missed HPIDB row</li>
-                        <li>Use <code>reader.py</code> to inspect one MITAB row by column index</li>
+                        <li><code>bun run pipeline:targets</code> fetches 100 targets per resolved disease</li>
+                        <li><code>bun run pipeline:viruses</code> rebuilds both final JSON copies</li>
+                        <li>Expected current result: 35 diseases, 3,275 targets, 686 Tier A viral rows</li>
+                        <li>The target stage aborts instead of overwriting output when any input ID fails</li>
                     </ul>
                 </div>
             </div>
