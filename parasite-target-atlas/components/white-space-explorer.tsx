@@ -124,7 +124,6 @@ export function WhiteSpaceExplorer() {
 
         <IndicationsTable
           indications={visibleIndications}
-          parasiteFilter="All autoimmune diseases"
           selectedId={selectedId}
           onSelect={setSelectedId}
         />
