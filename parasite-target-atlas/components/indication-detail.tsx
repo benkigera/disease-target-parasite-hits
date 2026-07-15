@@ -16,7 +16,7 @@ import {
 import Link from "next/link";
 import type { ReactNode } from "react";
 import type { TargetExplorerData } from "@/components/disease-target-explorer";
-import { diseasePath } from "@/lib/atlas-indications";
+import { diseasePath } from "@/lib/disease-routes";
 import type { ConvokeImmunologyRecord } from "@/lib/indications";
 import { getParasiteCandidate } from "@/lib/parasite-candidates";
 import { parasiteScanHitsByDiseaseId } from "@/lib/parasite-scan-hits";

@@ -65,7 +65,9 @@ export function TargetExplorerPanel({
   const visibleTargets: EnhancedTarget[] =
     mode === "viral" ? viralTargets : mode === "reranked" ? rerankedTargets : rankedTargets;
   const [selectedTargetId, setSelectedTargetId] = useState(
-    visibleTargets[0]?.targetId ?? rankedTargets[0]?.targetId ?? ""
+    rankedTargets.find((target) => target.viralMoleculeHitCount > 0)?.targetId ??
+      rankedTargets[0]?.targetId ??
+      ""
   );
   const selectedTarget =
     visibleTargets.find((target) => target.targetId === selectedTargetId) ??
