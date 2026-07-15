@@ -1,3 +1,5 @@
+import "server-only";
+
 import type {
   EnhancedTarget,
   TargetExplorerData,
@@ -7,6 +9,11 @@ import {
   indications as baseIndications,
   type ConvokeImmunologyRecord,
 } from "@/lib/indications";
+import {
+  pathogenDiscoveryByDiseaseId,
+  type PathogenDiscoveryProfile,
+  type PathogenMoleculeLead,
+} from "@/lib/pathogen-discovery";
 
 type PipelineDiseaseTargetMap = {
   disease_name: string;
@@ -38,7 +45,12 @@ type PipelineDiseaseTargetMap = {
 
 export type AtlasIndication = ConvokeImmunologyRecord & {
   openTargetsDiseaseId?: string;
-  targetExplorer?: TargetExplorerData;
+  targetExplorer: TargetExplorerData;
+};
+
+const discoveryProfileAliases: Record<string, string> = {
+  "beh-et-s-disease": "behcet-s-disease",
+  "sj-gren-syndrome": "sjogren-syndrome",
 };
 
 const pipelineDiseasesByName = new Map(
@@ -50,7 +62,17 @@ const pipelineDiseasesByName = new Map(
 
 export const atlasIndications: AtlasIndication[] = baseIndications.map((indication) => {
   const pipelineDisease = pipelineDiseasesByName.get(indication.name.toLowerCase());
-  if (!pipelineDisease) return indication;
+  if (!pipelineDisease) {
+    const profileId = discoveryProfileAliases[indication.id] ?? indication.id;
+    const profile = pathogenDiscoveryByDiseaseId[profileId];
+
+    return {
+      ...indication,
+      targetExplorer: profile
+        ? createDiscoveryExplorer(profile)
+        : createEmptyExplorer(),
+    };
+  }
 
   const topTargets: EnhancedTarget[] = pipelineDisease.top_targets.map((target) => ({
     targetId: target.id,
@@ -103,10 +125,6 @@ export const atlasIndications: AtlasIndication[] = baseIndications.map((indicati
   };
 });
 
-export function diseasePath(id: string) {
-  return `/${id}`;
-}
-
 export function findTargetLandscape(pathSegment: string) {
   let decodedSegment = pathSegment;
 
@@ -124,4 +142,110 @@ export function findTargetLandscape(pathSegment: string) {
         (value) => value.toLocaleLowerCase() === normalizedSegment
       )
   );
+}
+
+function createDiscoveryExplorer(
+  profile: PathogenDiscoveryProfile
+): TargetExplorerData {
+  const leadsByTarget = new Map<string | null, PathogenMoleculeLead[]>(
+    profile.targetOpportunities.map((target) => [target.humanTarget, []])
+  );
+
+  for (const lead of profile.moleculeLeads) {
+    const leads = leadsByTarget.get(lead.humanTarget);
+    if (leads) leads.push(lead);
+  }
+
+  const maxHitCount = Math.max(
+    1,
+    ...profile.targetOpportunities.map((target) => target.pathogenHitCount)
+  );
+  const baseTargets = profile.targetOpportunities.map((target, index) => {
+    const symbol = target.humanTarget ?? `TARGET-${index + 1}`;
+    const leads = leadsByTarget.get(target.humanTarget) ?? [];
+    const associationScore = Math.max(
+      0,
+      Math.min(1, (target.piPriorityScore ?? 0) / 5)
+    );
+    const hitDensity = target.pathogenHitCount / maxHitCount;
+
+    return {
+      targetId: symbol,
+      symbol,
+      approvedName: target.description ?? symbol,
+      openTargetsRank: target.rank ?? index + 1,
+      associationScore,
+      viralInformedRank: index + 1,
+      rankGain: 0,
+      viralInformedScore: associationScore * 0.7 + hitDensity * 0.3,
+      viralMoleculeHitCount: target.pathogenHitCount,
+      viralSourceCount: new Set(
+        leads.map((lead) => lead.sourceOrganism).filter(Boolean)
+      ).size,
+      supportingInteractionCount: leads.reduce(
+        (total, lead) => total + lead.interactionCount,
+        0
+      ),
+      viralMoleculeHits: leads.map((lead) => ({
+        name: lead.moleculeUniprot,
+        source: lead.sourceOrganism,
+        taxid: null,
+        uniprotIds: lead.moleculeUniprot,
+        publicationIds: lead.evidence.join(", ") || null,
+        sourceDatabase: lead.sourceType.toUpperCase(),
+        confidenceScore:
+          lead.bestIntactMiscore === null
+            ? null
+            : String(lead.bestIntactMiscore),
+      })),
+    } satisfies EnhancedTarget;
+  });
+
+  const viralRerankedTargets = [...baseTargets]
+    .sort(
+      (a, b) =>
+        b.viralInformedScore - a.viralInformedScore ||
+        a.openTargetsRank - b.openTargetsRank
+    )
+    .map((target, index) => ({
+      ...target,
+      viralInformedRank: index + 1,
+      rankGain: target.openTargetsRank - (index + 1),
+    }));
+  const rerankedById = new Map(
+    viralRerankedTargets.map((target) => [target.targetId, target])
+  );
+  const topTargets = baseTargets.map(
+    (target) => rerankedById.get(target.targetId) ?? target
+  );
+
+  return {
+    topTargets,
+    viralRerankedTargets,
+    highestViralHitTargets: [...topTargets].sort(
+      (a, b) =>
+        b.viralMoleculeHitCount - a.viralMoleculeHitCount ||
+        a.openTargetsRank - b.openTargetsRank
+    ),
+    targetCount: profile.targetCount,
+    targetsWithViralHits: profile.targetsWithPathogenHits,
+    viralMoleculeHitCount: topTargets.reduce(
+      (total, target) => total + target.viralMoleculeHitCount,
+      0
+    ),
+    description:
+      "Ranked disease targets with pathogen interaction evidence from the discovery layer.",
+  };
+}
+
+function createEmptyExplorer(): TargetExplorerData {
+  return {
+    topTargets: [],
+    viralRerankedTargets: [],
+    highestViralHitTargets: [],
+    targetCount: 0,
+    targetsWithViralHits: 0,
+    viralMoleculeHitCount: 0,
+    description: "No ranked targets are available in the current discovery layer.",
+  };
 }
