@@ -31,22 +31,13 @@ type IndicationDetailProps = {
   indication: ConvokeImmunologyRecord & {
     targetExplorer?: TargetExplorerData;
   };
-  parasiteFilter?: string;
   showExploreLink?: boolean;
 };
 
 export function InlineIndicationDetail({
   indication,
-  parasiteFilter,
   showExploreLink = true,
 }: IndicationDetailProps) {
-  const parasiteCandidate = getParasiteCandidate(indication.id);
-  const parasiteScanHit = parasiteScanHitsByDiseaseId[indication.id];
-  const pathogenDiscoveryProfile = getPathogenDiscoveryProfile(indication.id);
-  const parasiteScanLabel =
-    parasiteScanHit?.pathogenInteractor ?? parasiteScanHit?.moleculeHint;
-  const showScanHit =
-    parasiteFilter === "Target-first scan hits" && parasiteScanLabel;
   const unmetNeeds = parseUnmetNeeds(indication.keyUnmetNeeds).slice(0, 3);
   const guidelineDrugs = Object.entries(indication.guidelineDrugs ?? {}).slice(0, 8);
   const keyCompanies = Object.entries(indication.keyCompanies ?? {}).slice(0, 8);
@@ -157,18 +148,6 @@ export function InlineIndicationDetail({
                 <span className="company-link-icon" aria-hidden="true">↗</span>
               </Link>
             </div>
-          </section>
-        ) : null}
-
-        {!indication.targetExplorer ? (
-          <section className="expanded-detail-pathogen">
-            <PathogenDiscoveryPanel
-              diseaseName={indication.name}
-              parasiteCandidate={parasiteCandidate}
-              parasiteScanHit={parasiteScanHit}
-              profile={pathogenDiscoveryProfile}
-              showScanHit={Boolean(showScanHit)}
-            />
           </section>
         ) : null}
       </div>

@@ -12,7 +12,6 @@ import { cn } from "@/lib/utils";
 
 type IndicationsTableProps = {
   indications: ConvokeImmunologyRecord[];
-  parasiteFilter: string;
   selectedId: string | null;
   onSelect: (id: string | null) => void;
 };
@@ -147,7 +146,6 @@ export function IndicationsTableHeader({
 
 export function IndicationsTable({
   indications,
-  parasiteFilter,
   selectedId,
   onSelect,
 }: IndicationsTableProps) {
@@ -167,7 +165,6 @@ export function IndicationsTable({
               <div className="expanded-detail w-full min-w-0 max-w-full border-b border-slate-200">
                 <InlineIndicationDetail
                   indication={indication}
-                  parasiteFilter={parasiteFilter}
                 />
               </div>
             ) : null}
