@@ -9,11 +9,6 @@ import {
   indications as baseIndications,
   type ConvokeImmunologyRecord,
 } from "@/lib/indications";
-import {
-  pathogenDiscoveryByDiseaseId,
-  type PathogenDiscoveryProfile,
-  type PathogenMoleculeLead,
-} from "@/lib/pathogen-discovery";
 
 type PipelineDiseaseTargetMap = {
   disease_name: string;
@@ -48,31 +43,65 @@ export type AtlasIndication = ConvokeImmunologyRecord & {
   targetExplorer: TargetExplorerData;
 };
 
-const discoveryProfileAliases: Record<string, string> = {
-  "beh-et-s-disease": "behcet-s-disease",
-  "sj-gren-syndrome": "sjogren-syndrome",
+type AtlasTargetSource = {
+  diseaseId: string;
+  mapping: "direct" | "proxy";
 };
 
-const pipelineDiseasesByName = new Map(
+const targetSourceByIndicationId: Record<string, AtlasTargetSource> = {
+  "graft-versus-host-disease": { diseaseId: "MONDO_0013730", mapping: "direct" },
+  dermatomyositis: { diseaseId: "MONDO_0016367", mapping: "direct" },
+  "adult-onset-still-s-disease": { diseaseId: "MONDO_0019355", mapping: "direct" },
+  "scleroderma-limited": { diseaseId: "MONDO_0019340", mapping: "proxy" },
+  polymyositis: { diseaseId: "MONDO_0019127", mapping: "direct" },
+  "juvenile-idiopathic-arthritis": { diseaseId: "MONDO_0011429", mapping: "direct" },
+  "antisynthetase-syndrome": { diseaseId: "MONDO_0019344", mapping: "direct" },
+  "igg4-related-disease": { diseaseId: "MONDO_0017287", mapping: "direct" },
+  "scleroderma-systemic": { diseaseId: "MONDO_0019340", mapping: "direct" },
+  "iga-vasculitis": { diseaseId: "EFO_1000965", mapping: "direct" },
+  "kawasaki-disease": { diseaseId: "MONDO_0012727", mapping: "direct" },
+  "sapho-syndrome": { diseaseId: "MONDO_0019266", mapping: "direct" },
+  "sj-gren-syndrome": { diseaseId: "MONDO_0010030", mapping: "direct" },
+  "takayasu-arteritis": { diseaseId: "MONDO_0017991", mapping: "direct" },
+  "hypersensitivity-vasculitis": { diseaseId: "MONDO_0018882", mapping: "proxy" },
+  "mixed-connective-tissue-disease": { diseaseId: "MONDO_0005854", mapping: "direct" },
+  "reactive-arthritis": { diseaseId: "MONDO_0017376", mapping: "direct" },
+  "palindromic-rheumatism": { diseaseId: "MONDO_0008383", mapping: "proxy" },
+  "polyarteritis-nodosa": { diseaseId: "MONDO_0019170", mapping: "direct" },
+  "giant-cell-arteritis": { diseaseId: "MONDO_0008538", mapping: "direct" },
+  "eosinophilic-granulomatosis-with-polyangiitis": { diseaseId: "MONDO_0015943", mapping: "direct" },
+  "beh-et-s-disease": { diseaseId: "MONDO_0007191", mapping: "direct" },
+  cryoglobulinemia: { diseaseId: "MONDO_0005576", mapping: "direct" },
+  "multisystem-inflammatory-syndrome-in-children": { diseaseId: "MONDO_0100163", mapping: "direct" },
+  "cogan-syndrome": { diseaseId: "MONDO_0018882", mapping: "proxy" },
+  "jaccoud-arthropathy": { diseaseId: "MONDO_0007915", mapping: "proxy" },
+  "mikulicz-disease": { diseaseId: "MONDO_0017287", mapping: "proxy" },
+  "autoimmune-lymphoproliferative-syndrome": { diseaseId: "MONDO_0017979", mapping: "direct" },
+  "heerfordt-syndrome": { diseaseId: "MONDO_0019338", mapping: "proxy" },
+  "eosinophilia-myalgia-syndrome": { diseaseId: "MONDO_0004941", mapping: "direct" },
+  "granulomatous-myositis": { diseaseId: "MONDO_0021167", mapping: "proxy" },
+  "relapsing-polychondritis": { diseaseId: "MONDO_0019125", mapping: "direct" },
+  "rheumatoid-arthritis": { diseaseId: "MONDO_0008383", mapping: "direct" },
+  "lupus-erythematosus-systemic": { diseaseId: "MONDO_0007915", mapping: "direct" },
+  "polymyalgia-rheumatica": { diseaseId: "MONDO_0019735", mapping: "direct" },
+  "ankylosing-spondylitis": { diseaseId: "MONDO_0005306", mapping: "direct" },
+  "psoriatic-arthritis": { diseaseId: "MONDO_0011849", mapping: "direct" },
+  "felty-syndrome": { diseaseId: "MONDO_0007603", mapping: "direct" },
+};
+
+const pipelineDiseasesById = new Map(
   (diseaseTargetPathogenMap as PipelineDiseaseTargetMap[]).map((disease) => [
-    disease.disease_name.toLowerCase(),
+    disease.disease_id,
     disease,
   ])
 );
 
 export const atlasIndications: AtlasIndication[] = baseIndications.map((indication) => {
-  const pipelineDisease = pipelineDiseasesByName.get(indication.name.toLowerCase());
-  if (!pipelineDisease) {
-    const profileId = discoveryProfileAliases[indication.id] ?? indication.id;
-    const profile = pathogenDiscoveryByDiseaseId[profileId];
-
-    return {
-      ...indication,
-      targetExplorer: profile
-        ? createDiscoveryExplorer(profile)
-        : createEmptyExplorer(),
-    };
-  }
+  const targetSource = targetSourceByIndicationId[indication.id];
+  const pipelineDisease = targetSource
+    ? pipelineDiseasesById.get(targetSource.diseaseId)
+    : undefined;
+  if (!pipelineDisease || !targetSource) return { ...indication, targetExplorer: createEmptyExplorer() };
 
   const topTargets: EnhancedTarget[] = pipelineDisease.top_targets.map((target) => ({
     targetId: target.id,
@@ -119,8 +148,12 @@ export const atlasIndications: AtlasIndication[] = baseIndications.map((indicati
         (total, target) => total + target.viralMoleculeHitCount,
         0
       ),
+      sourceDiseaseName: pipelineDisease.disease_name,
+      sourceMapping: targetSource.mapping,
       description:
-        "Tier A viral direct-interaction evidence from the disease-target-virus pipeline.",
+        targetSource.mapping === "proxy"
+          ? `Open Targets parent-disease proxy: ${pipelineDisease.disease_name}. Tier A viral direct-interaction evidence from the disease-target-virus pipeline.`
+          : "Tier A viral direct-interaction evidence from the disease-target-virus pipeline.",
     },
   };
 });
@@ -142,100 +175,6 @@ export function findTargetLandscape(pathSegment: string) {
         (value) => value.toLocaleLowerCase() === normalizedSegment
       )
   );
-}
-
-function createDiscoveryExplorer(
-  profile: PathogenDiscoveryProfile
-): TargetExplorerData {
-  const leadsByTarget = new Map<string | null, PathogenMoleculeLead[]>(
-    profile.targetOpportunities.map((target) => [target.humanTarget, []])
-  );
-
-  for (const lead of profile.moleculeLeads) {
-    const leads = leadsByTarget.get(lead.humanTarget);
-    if (leads) leads.push(lead);
-  }
-
-  const maxHitCount = Math.max(
-    1,
-    ...profile.targetOpportunities.map((target) => target.pathogenHitCount)
-  );
-  const baseTargets = profile.targetOpportunities.map((target, index) => {
-    const symbol = target.humanTarget ?? `TARGET-${index + 1}`;
-    const leads = leadsByTarget.get(target.humanTarget) ?? [];
-    const associationScore = Math.max(
-      0,
-      Math.min(1, (target.piPriorityScore ?? 0) / 5)
-    );
-    const hitDensity = target.pathogenHitCount / maxHitCount;
-
-    return {
-      targetId: symbol,
-      symbol,
-      approvedName: target.description ?? symbol,
-      openTargetsRank: target.rank ?? index + 1,
-      associationScore,
-      viralInformedRank: index + 1,
-      rankGain: 0,
-      viralInformedScore: associationScore * 0.7 + hitDensity * 0.3,
-      viralMoleculeHitCount: target.pathogenHitCount,
-      viralSourceCount: new Set(
-        leads.map((lead) => lead.sourceOrganism).filter(Boolean)
-      ).size,
-      supportingInteractionCount: leads.reduce(
-        (total, lead) => total + lead.interactionCount,
-        0
-      ),
-      viralMoleculeHits: leads.map((lead) => ({
-        name: lead.moleculeUniprot,
-        source: lead.sourceOrganism,
-        taxid: null,
-        uniprotIds: lead.moleculeUniprot,
-        publicationIds: lead.evidence.join(", ") || null,
-        sourceDatabase: lead.sourceType.toUpperCase(),
-        confidenceScore:
-          lead.bestIntactMiscore === null
-            ? null
-            : String(lead.bestIntactMiscore),
-      })),
-    } satisfies EnhancedTarget;
-  });
-
-  const viralRerankedTargets = [...baseTargets]
-    .sort(
-      (a, b) =>
-        b.viralInformedScore - a.viralInformedScore ||
-        a.openTargetsRank - b.openTargetsRank
-    )
-    .map((target, index) => ({
-      ...target,
-      viralInformedRank: index + 1,
-      rankGain: target.openTargetsRank - (index + 1),
-    }));
-  const rerankedById = new Map(
-    viralRerankedTargets.map((target) => [target.targetId, target])
-  );
-  const topTargets = baseTargets.map(
-    (target) => rerankedById.get(target.targetId) ?? target
-  );
-
-  return {
-    topTargets,
-    viralRerankedTargets,
-    highestViralHitTargets: [...topTargets].sort(
-      (a, b) =>
-        b.viralMoleculeHitCount - a.viralMoleculeHitCount ||
-        a.openTargetsRank - b.openTargetsRank
-    ),
-    targetCount: profile.targetCount,
-    targetsWithViralHits: profile.targetsWithPathogenHits,
-    viralMoleculeHitCount: topTargets.reduce(
-      (total, target) => total + target.viralMoleculeHitCount,
-      0
-    ),
-    description:
-      "Ranked disease targets with pathogen interaction evidence from the discovery layer.",
-  };
 }
 
 function createEmptyExplorer(): TargetExplorerData {
