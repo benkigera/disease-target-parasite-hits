@@ -13,8 +13,10 @@ import {
   Syringe,
   Target,
 } from "lucide-react";
+import Link from "next/link";
 import type { ReactNode } from "react";
 import type { TargetExplorerData } from "@/components/disease-target-explorer";
+import { diseasePath } from "@/lib/atlas-indications";
 import type { ConvokeImmunologyRecord } from "@/lib/indications";
 import { getParasiteCandidate } from "@/lib/parasite-candidates";
 import { parasiteScanHitsByDiseaseId } from "@/lib/parasite-scan-hits";
@@ -29,14 +31,14 @@ type IndicationDetailProps = {
   indication: ConvokeImmunologyRecord & {
     targetExplorer?: TargetExplorerData;
   };
-  onOpenTargetLandscape?: (id: string) => void;
   parasiteFilter?: string;
+  showExploreLink?: boolean;
 };
 
 export function InlineIndicationDetail({
   indication,
-  onOpenTargetLandscape,
   parasiteFilter,
+  showExploreLink = true,
 }: IndicationDetailProps) {
   const parasiteCandidate = getParasiteCandidate(indication.id);
   const parasiteScanHit = parasiteScanHitsByDiseaseId[indication.id];
@@ -142,22 +144,23 @@ export function InlineIndicationDetail({
           </section>
         ) : null}
 
-        {indication.targetExplorer ? (
+        {showExploreLink ? (
           <section className="expanded-detail-pathogen">
             <h4>Target landscape</h4>
             <div className="company-badges">
-              <button
+              <Link
                 className="company-badge group"
-                onClick={() => onOpenTargetLandscape?.(indication.id)}
-                type="button"
+                href={diseasePath(indication.id)}
               >
                 <VirusExploreIcon />
                 <span>Click to explore parasite molecules</span>
                 <span className="company-link-icon" aria-hidden="true">↗</span>
-              </button>
+              </Link>
             </div>
           </section>
-        ) : (
+        ) : null}
+
+        {!indication.targetExplorer ? (
           <section className="expanded-detail-pathogen">
             <PathogenDiscoveryPanel
               diseaseName={indication.name}
@@ -167,7 +170,7 @@ export function InlineIndicationDetail({
               showScanHit={Boolean(showScanHit)}
             />
           </section>
-        )}
+        ) : null}
       </div>
     </div>
   );

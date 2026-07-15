@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useMemo, useState, type ReactNode } from "react";
 import { cn } from "@/lib/utils";
 
@@ -41,10 +42,12 @@ export type TargetExplorerData = {
 };
 
 type TargetExplorerPanelProps = {
+  diseaseName?: string;
   explorer: TargetExplorerData;
 };
 
 export function TargetExplorerPanel({
+  diseaseName,
   explorer,
 }: TargetExplorerPanelProps) {
   const [mode, setMode] = useState<TargetExplorerMode>("ranked");
@@ -80,28 +83,59 @@ export function TargetExplorerPanel({
   );
 
   return (
-    <div className="relative mt-8 overflow-hidden border-[1.5px] border-[#3A2516] bg-[#F1E6CB] text-[#3A2516] shadow-[6px_6px_0_rgba(58,37,22,0.18)]">
+    <div className="relative flex min-h-[620px] flex-col overflow-hidden border-[1.5px] border-[#3A2516] bg-[#F1E6CB] text-[#3A2516] shadow-[5px_5px_0_rgba(58,37,22,0.18)] [font-family:'Albert_Sans',sans-serif] lg:h-[calc(100dvh-112px)] lg:min-h-[600px] lg:max-h-[940px]">
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute -right-24 top-16 z-0 flex w-[54%] rotate-[-18deg] flex-col gap-1 opacity-90"
+        className="pointer-events-none absolute -right-24 top-11 z-0 flex w-[54%] rotate-[-18deg] flex-col gap-1 opacity-90"
       >
-        <span className="h-3 bg-[#E54489]" />
-        <span className="h-3 bg-[#F09131]" />
-        <span className="h-3 bg-[#F0BC2A]" />
-        <span className="h-3 bg-[#3D9F47]" />
-        <span className="h-3 bg-[#3F8BC4]" />
+        <span className="h-2 bg-[#E54489]" />
+        <span className="h-2 bg-[#F09131]" />
+        <span className="h-2 bg-[#F0BC2A]" />
+        <span className="h-2 bg-[#3D9F47]" />
+        <span className="h-2 bg-[#3F8BC4]" />
       </div>
 
-      <div className="relative z-10 border-b-[1.5px] border-[#3A2516] px-5 py-4">
-        <div className="flex flex-wrap items-end justify-between gap-4">
-          <div className="min-w-0">
-            <div className="text-[10px] font-black uppercase tracking-[0.22em]">
-              Target Index
+      <div className="relative z-10 shrink-0 border-b-[1.5px] border-[#3A2516] px-4 py-2.5">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="flex min-w-0 flex-wrap items-center gap-3">
+            <Link
+              aria-label="Back to dataset"
+              className="grid size-8 shrink-0 place-items-center border-[1.5px] border-[#3A2516] bg-[#E5D6B0] text-base font-black transition hover:bg-[#F0BC2A]"
+              href="/"
+            >
+              ←
+            </Link>
+            <div className="min-w-0">
+              <div className="text-[9px] font-black uppercase tracking-[0.22em] opacity-65">
+                Target Index
+              </div>
+              <h2 className="truncate text-[clamp(1.6rem,2.4vw,2.5rem)] font-black leading-[0.9] tracking-[-0.02em] [font-family:'Big_Shoulders_Display',Impact,sans-serif]">
+                {diseaseName ?? "Disease landscape"}
+              </h2>
             </div>
-            <div className="mt-1 flex flex-wrap gap-2">
+            <div className="flex flex-wrap items-center gap-2">
               <SpecBox label="Open targets" active={mode === "ranked"} />
               <SpecBox label="Viral hits" active={mode === "viral"} />
               <SpecBox label="Rerank" active={mode === "reranked"} />
+              {topJumpers.length > 0 ? (
+                <span className="mx-0.5 hidden h-4 w-px bg-[#3A2516]/35 sm:block" />
+              ) : null}
+              {topJumpers.slice(0, 3).map((target) => (
+                <button
+                  key={`jumper-${target.targetId}`}
+                  className="group hidden items-center gap-1 border border-[#3A2516] bg-[#E5D6B0] px-1.5 py-0.5 text-[9px] font-black uppercase transition hover:bg-[#F0BC2A]/55 sm:flex"
+                  onClick={() => {
+                    setMode("reranked");
+                    setSelectedTargetId(target.targetId);
+                  }}
+                  type="button"
+                >
+                  <span>{target.symbol}</span>
+                  <span className="numeric bg-[#3D9F47] px-1 text-[#F1E6CB]">
+                    +{target.rankGain}
+                  </span>
+                </button>
+              ))}
             </div>
           </div>
           <div className="flex gap-5">
@@ -112,7 +146,7 @@ export function TargetExplorerPanel({
         </div>
       </div>
 
-      <div className="relative z-10 overflow-hidden">
+      <div className="relative z-10 flex min-h-0 flex-1 flex-col overflow-hidden">
         <div
           className="grid grid-cols-3 overflow-hidden border-b-[1.5px] border-[#3A2516] bg-[#E5D6B0]/70 lg:flex lg:overflow-x-auto"
           role="tablist"
@@ -131,9 +165,9 @@ export function TargetExplorerPanel({
           </ExplorerModeButton>
         </div>
 
-        <div className="grid min-h-[560px] lg:grid-cols-[320px_1fr]">
+        <div className="grid min-h-0 flex-1 lg:grid-cols-[270px_minmax(0,1fr)]">
           <div
-            className="border-b-[1.5px] border-[#3A2516] bg-[#F1E6CB]/95 lg:max-h-[560px] lg:overflow-y-auto lg:border-b-0 lg:border-r-[1.5px]"
+            className="border-b-[1.5px] border-[#3A2516] bg-[#F1E6CB]/95 lg:min-h-0 lg:overflow-y-auto lg:border-b-0 lg:border-r-[1.5px]"
             aria-label="Target list"
           >
             <div className="sticky top-0 z-10 grid grid-cols-[40px_1fr_80px] border-b-[1.5px] border-[#3A2516] bg-[#E5D6B0] px-4 py-2 text-[10px] font-black uppercase tracking-[0.16em]">
@@ -149,7 +183,7 @@ export function TargetExplorerPanel({
                   <button
                     aria-expanded={isSelected}
                     className={cn(
-                      "grid w-full grid-cols-[40px_1fr_80px] items-center border-b border-[#3A2516]/20 px-4 py-3 text-left transition hover:bg-[#E5D6B0]/70",
+                      "grid w-full grid-cols-[40px_1fr_80px] items-center border-b border-[#3A2516]/20 px-4 py-2 text-left transition hover:bg-[#E5D6B0]/70",
                       isSelected && "bg-[#3A2516] text-[#F1E6CB] hover:bg-[#3A2516]"
                     )}
                     onClick={() => setSelectedTargetId(target.targetId)}
@@ -175,7 +209,7 @@ export function TargetExplorerPanel({
             })}
           </div>
 
-          <div className="hidden max-h-[560px] min-w-0 overflow-y-auto bg-[#F1E6CB]/90 p-8 lg:block">
+          <div className="hidden min-h-0 min-w-0 overflow-y-auto bg-[#F1E6CB]/90 p-4 lg:block xl:p-5">
             {selectedTarget ? (
               <TargetHitDetail target={selectedTarget} />
             ) : (
@@ -187,27 +221,6 @@ export function TargetExplorerPanel({
         </div>
       </div>
 
-      {topJumpers.length > 0 ? (
-        <div className="relative z-10 border-t-[1.5px] border-[#3A2516] bg-[#E5D6B0]/70 px-5 py-4">
-          <SectionTitle tone="default">Significant Priority Jumps</SectionTitle>
-          <div className="mt-3 flex flex-wrap gap-2">
-            {topJumpers.map((target) => (
-              <button
-                key={`jumper-${target.targetId}`}
-                className="group flex items-center gap-2 border-[1.5px] border-[#3A2516] bg-[#F1E6CB] px-3 py-1.5 text-[11px] font-black uppercase transition hover:bg-[#F0BC2A]/50"
-                onClick={() => {
-                  setMode("reranked");
-                  setSelectedTargetId(target.targetId);
-                }}
-                type="button"
-              >
-                <span>{target.symbol}</span>
-                <span className="numeric bg-[#3D9F47] px-1 text-[#F1E6CB]">+{target.rankGain}</span>
-              </button>
-            ))}
-          </div>
-        </div>
-      ) : null}
     </div>
   );
 }
@@ -225,7 +238,7 @@ function ExplorerModeButton({
     <button
       aria-pressed={active}
       className={cn(
-        "min-w-0 border-b-[4px] px-1.5 py-2 text-center text-[9px] font-black uppercase tracking-[0.06em] transition lg:shrink-0 lg:px-4 lg:py-3 lg:text-[10px] lg:tracking-[0.14em]",
+        "min-w-0 border-b-[4px] px-1.5 py-2 text-center text-[9px] font-black uppercase tracking-[0.06em] transition lg:shrink-0 lg:px-4 lg:py-2 lg:text-[10px] lg:tracking-[0.14em]",
         active
           ? "border-[#E5392A] text-[#3A2516]"
           : "border-transparent text-[#3A2516]/55 hover:text-[#3A2516]"
@@ -244,7 +257,7 @@ function ExplorerStat({ label, value }: { label: string; value: number }) {
       <div className="text-[9px] font-black uppercase tracking-[0.14em] opacity-70">
         {label}
       </div>
-      <div className="numeric mt-1 text-2xl font-black leading-none tabular-nums [font-family:'JetBrains_Mono',ui-monospace,monospace]">
+      <div className="numeric mt-0.5 text-xl font-black leading-none tabular-nums [font-family:'JetBrains_Mono',ui-monospace,monospace]">
         {value.toLocaleString()}
       </div>
     </div>
@@ -288,10 +301,10 @@ function TargetHitDetail({ target }: { target: EnhancedTarget }) {
 
   return (
     <div className="min-w-0">
-      <div className="flex flex-wrap items-start justify-between gap-4 border-b-[1.5px] border-[#3A2516] pb-5 sm:gap-6 sm:pb-6">
+      <div className="flex flex-wrap items-start justify-between gap-3 border-b-[1.5px] border-[#3A2516] pb-3 sm:gap-5">
         <div className="min-w-0">
           <div className="flex min-w-0 flex-wrap items-center gap-2 sm:gap-3">
-            <h4 className="truncate text-4xl font-black uppercase leading-[0.85] tracking-[-0.02em] [font-family:'Big_Shoulders_Display',Impact,sans-serif] sm:text-6xl">
+            <h4 className="truncate text-4xl font-black uppercase leading-[0.85] tracking-[-0.02em] [font-family:'Big_Shoulders_Display',Impact,sans-serif] sm:text-5xl">
               {target.symbol}
             </h4>
             <div className="flex flex-wrap gap-1.5">
@@ -303,7 +316,7 @@ function TargetHitDetail({ target }: { target: EnhancedTarget }) {
               )}
             </div>
           </div>
-          <p className="mt-2 max-w-2xl text-sm font-semibold leading-5 opacity-75">
+          <p className="mt-1 max-w-2xl text-[12px] font-semibold leading-4 opacity-75">
             {target.approvedName}
           </p>
         </div>
@@ -313,15 +326,15 @@ function TargetHitDetail({ target }: { target: EnhancedTarget }) {
         </div>
       </div>
 
-      <div className="mt-8 grid grid-cols-2 gap-4 sm:grid-cols-4">
+      <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
         <TargetMetric color="red" label="Pathogen Molecules" value={target.viralMoleculeHitCount} />
         <TargetMetric color="orange" label="Source Organisms" value={target.viralSourceCount} />
         <TargetMetric color="green" label="Interaction Records" value={target.supportingInteractionCount} />
         <TargetMetric color="blue" label="Viral Priority Score" value={target.viralInformedScore.toFixed(3)} />
       </div>
 
-      <div className="mt-10">
-        <div className="flex items-center justify-between mb-4">
+      <div className="mt-4">
+        <div className="mb-2 flex items-center justify-between">
           <SectionTitle tone="default">Interaction Evidence Matrix</SectionTitle>
           <div className="flex items-center gap-4 text-[10px] font-black uppercase tracking-[0.1em] opacity-70">
             <span className="flex items-center gap-1.5">
@@ -343,11 +356,11 @@ function TargetHitDetail({ target }: { target: EnhancedTarget }) {
             {moleculeHits.map((hit, index) => (
               <div
                 key={`${target.targetId}-${hit.name}-${hit.source}-${index}`}
-                className="grid grid-cols-1 gap-3 border-b border-[#3A2516]/20 px-3 py-3 last:border-b-0 hover:bg-[#E5D6B0]/45 sm:grid-cols-[1.5fr_1fr_1fr] sm:items-center"
+                className="grid grid-cols-1 gap-2 border-b border-[#3A2516]/20 px-3 py-2 last:border-b-0 hover:bg-[#E5D6B0]/45 sm:grid-cols-[1.5fr_1fr_1fr] sm:items-center"
               >
                 <div>
-                  <div className="text-sm font-black">{hit.name ?? "Unnamed Molecule"}</div>
-                  <div className="mt-1 text-[10px] font-semibold opacity-65">{hit.source ?? `taxid:${hit.taxid}`}</div>
+                  <div className="text-[12px] font-black">{hit.name ?? "Unnamed Molecule"}</div>
+                  <div className="mt-0.5 truncate text-[9px] font-semibold opacity-65">{hit.source ?? `taxid:${hit.taxid}`}</div>
                 </div>
                 <div>
                   <ImpactBars value={confidencePercent(hit.confidenceScore)} />
@@ -388,12 +401,12 @@ function TargetMetric({
 
   return (
     <div className="overflow-hidden border-[1.5px] border-[#3A2516]">
-      <div className={cn("h-3", stripClass)} />
-      <div className="p-3">
-      <div className="mb-2 text-[9px] font-black uppercase tracking-[0.14em] opacity-65">
+      <div className={cn("h-2", stripClass)} />
+      <div className="p-2.5">
+      <div className="mb-1 text-[8px] font-black uppercase tracking-[0.12em] opacity-65">
         {label}
       </div>
-      <div className="numeric text-2xl font-black [font-family:'JetBrains_Mono',ui-monospace,monospace]">
+      <div className="numeric text-xl font-black [font-family:'JetBrains_Mono',ui-monospace,monospace]">
         {value}
       </div>
       </div>

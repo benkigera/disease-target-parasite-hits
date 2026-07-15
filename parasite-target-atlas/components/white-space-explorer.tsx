@@ -1,127 +1,35 @@
 "use client";
 
+import Link from "next/link";
 import { useMemo, useState } from "react";
 import {
   TargetExplorerPanel,
-  type EnhancedTarget,
-  type TargetExplorerData,
 } from "@/components/disease-target-explorer";
 import {
   compositeScore,
-  indications as baseIndications,
   IMMUNOLOGY_RECORD_COUNT,
   SOURCE_IMMUNOLOGY_RECORD_COUNT,
   SOURCE_URL,
-  type ConvokeImmunologyRecord,
 } from "@/lib/indications";
-import diseaseTargetPathogenMap from "@/data/disease_target_pathogen_map.json";
 import { ConvokeChrome } from "@/components/convoke-chrome";
 import { FilterBar, type SearchSuggestion } from "@/components/filter-bar";
 import {
   IndicationsTable,
   IndicationsTableHeader,
 } from "@/components/indications-table";
+import { InlineIndicationDetail } from "@/components/indication-detail";
 import { PageHeader } from "@/components/page-header";
+import { atlasIndications as indications } from "@/lib/atlas-indications";
 import { parasiteCandidatesByDiseaseId } from "@/lib/parasite-candidates";
 import { parasiteScanHitsByDiseaseId } from "@/lib/parasite-scan-hits";
 
-type PipelineDiseaseTargetMap = {
-  disease_name: string;
-  disease_id: string;
-  top_targets: {
-    approved_name: string;
-    approved_symbol?: string;
-    id: string;
-    score: number;
-    open_target_rank: number;
-    pathogen_hits: {
-      pathogen_molecule?: string;
-      pathogen_source_organism?: string;
-      pathogen_id?: string;
-      pathogen_taxid?: string;
-      source_database?: string;
-      confidence?: string;
-      publication_ids?: string[];
-    }[];
-    association_score: number;
-    viral_molecule_hit_count: number;
-    viral_source_taxa_count: number;
-    supporting_interaction_count: number;
-    viral_informed_score: number;
-    viral_informed_rank: number;
-    rank_gain: number;
-  }[];
-};
-
-type AtlasIndication = ConvokeImmunologyRecord & {
-  openTargetsDiseaseId?: string;
-  targetExplorer?: TargetExplorerData;
-};
-
-const pipelineDiseasesByName = new Map(
-  (diseaseTargetPathogenMap as PipelineDiseaseTargetMap[]).map((disease) => [
-    disease.disease_name.toLowerCase(),
-    disease,
-  ])
-);
-
-const indications: AtlasIndication[] = baseIndications.map((indication) => {
-  const pipelineDisease = pipelineDiseasesByName.get(indication.name.toLowerCase());
-  if (!pipelineDisease) return indication;
-
-  const topTargets: EnhancedTarget[] = pipelineDisease.top_targets.map((target) => ({
-      targetId: target.id,
-      symbol: target.approved_symbol ?? target.id,
-      approvedName: target.approved_name,
-      openTargetsRank: target.open_target_rank,
-      associationScore: target.association_score,
-      viralInformedRank: target.viral_informed_rank,
-      rankGain: target.rank_gain,
-      viralInformedScore: target.viral_informed_score,
-      viralMoleculeHitCount: target.viral_molecule_hit_count,
-      viralSourceCount: target.viral_source_taxa_count,
-      supportingInteractionCount: target.supporting_interaction_count,
-      viralMoleculeHits: target.pathogen_hits.map((hit) => ({
-        name: hit.pathogen_molecule ?? null,
-        source: hit.pathogen_source_organism ?? null,
-        taxid: hit.pathogen_taxid ?? null,
-        uniprotIds: hit.pathogen_id ?? null,
-        publicationIds: hit.publication_ids?.map((id) => `PMID ${id}`).join(", ") ?? null,
-        sourceDatabase: hit.source_database ?? null,
-        confidenceScore: hit.confidence ?? null,
-      })),
-  }));
-
-  const viralRerankedTargets = [...topTargets].sort(
-    (a, b) => a.viralInformedRank - b.viralInformedRank
-  );
-  const highestViralHitTargets = [...topTargets].sort(
-    (a, b) => b.viralMoleculeHitCount - a.viralMoleculeHitCount
-  );
-
-  return {
-    ...indication,
-    openTargetsDiseaseId: pipelineDisease.disease_id,
-    targetExplorer: {
-      topTargets,
-      viralRerankedTargets,
-      highestViralHitTargets,
-      targetCount: topTargets.length,
-      targetsWithViralHits: topTargets.filter((target) => target.viralMoleculeHitCount > 0).length,
-      viralMoleculeHitCount: topTargets.reduce(
-        (total, target) => total + target.viralMoleculeHitCount,
-        0
-      ),
-      description:
-        "Tier A viral direct-interaction evidence from the disease-target-virus pipeline.",
-    },
-  };
-});
-
-export function WhiteSpaceExplorer() {
+export function WhiteSpaceExplorer({
+  initialLandscapeId = null,
+}: {
+  initialLandscapeId?: string | null;
+}) {
   const [search, setSearch] = useState("");
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [landscapeId, setLandscapeId] = useState<string | null>(null);
 
   const searchSuggestions = useMemo<SearchSuggestion[]>(() => {
     const searchTerm = search.trim().toLowerCase();
@@ -193,42 +101,56 @@ export function WhiteSpaceExplorer() {
 
     return sorted;
   }, [search]);
-  const landscapeIndication = landscapeId
-    ? indications.find((indication) => indication.id === landscapeId)
+  const landscapeIndication = initialLandscapeId
+    ? indications.find((indication) => indication.id === initialLandscapeId)
     : null;
 
-  if (landscapeIndication?.targetExplorer) {
+  if (landscapeIndication) {
     return (
       <main className="min-h-screen overflow-x-hidden bg-[var(--color-page)] text-[var(--color-text)]">
         <ConvokeChrome />
-        <div className="mx-auto flex w-full max-w-[1720px] flex-col px-4 pb-12 pt-5 sm:px-6 lg:px-8">
-          <div className="mb-5 flex flex-wrap items-end justify-between gap-4 border-b border-[#b8b0a4] bg-[#ede8e0] px-5 py-4">
-            <div className="min-w-0">
-              <button
-                className="text-[11px] font-medium uppercase tracking-[0.18em] text-[#8a8178] transition hover:text-[#1a1a1a]"
-                onClick={() => setLandscapeId(null)}
-                type="button"
-              >
-                Back to dataset
-              </button>
-              <h1 className="mt-3 truncate font-serif text-3xl font-normal leading-none text-[#1a1a1a] sm:text-5xl">
-                {landscapeIndication.name}
-              </h1>
+        <div className="mx-auto flex w-full max-w-[1920px] flex-col px-3 pb-4 pt-3 sm:px-4 lg:px-5">
+          {!landscapeIndication.targetExplorer ? (
+            <div className="mb-3 flex min-h-14 flex-wrap items-center justify-between gap-x-5 gap-y-2 border border-slate-300 bg-white px-3 py-2 sm:px-4">
+              <div className="flex min-w-0 items-center gap-3">
+                <Link
+                  aria-label="Back to dataset"
+                  className="grid size-8 shrink-0 place-items-center border border-slate-300 text-base text-slate-500 transition hover:border-slate-500 hover:text-slate-900"
+                  href="/"
+                >
+                  ←
+                </Link>
+                <div className="min-w-0">
+                  <div className="text-[8px] font-bold uppercase tracking-[0.18em] text-slate-400">
+                    Disease landscape
+                  </div>
+                  <h1 className="mt-0.5 truncate text-[clamp(1.3rem,2.4vw,2rem)] font-semibold leading-none tracking-[-0.035em] text-[#17201d]">
+                    {landscapeIndication.name}
+                  </h1>
+                </div>
+              </div>
+              <div className="flex flex-wrap items-center gap-1.5 text-[9px] font-bold uppercase tracking-[0.12em] text-slate-500">
+                <span className="border border-slate-300 bg-[#f3f5f1] px-2.5 py-1.5">
+                  Prevalence · {landscapeIndication.prevalence}
+                </span>
+              </div>
             </div>
-            <div className="flex flex-wrap gap-2 text-[11px] font-medium uppercase tracking-[0.14em] text-[#5a5a5a]">
-              <span className="border border-[#b8b0a4] bg-transparent px-3 py-1">
-                {landscapeIndication.prevalence}
-              </span>
-              <span className="border border-[#b8b0a4] bg-transparent px-3 py-1">
-                {landscapeIndication.targetExplorer.targetCount.toLocaleString()} targets
-              </span>
-              <span className="border border-[#b8b0a4] bg-transparent px-3 py-1">
-                {landscapeIndication.targetExplorer.viralMoleculeHitCount.toLocaleString()} hits
-              </span>
-            </div>
-          </div>
+          ) : null}
 
-          <TargetExplorerPanel explorer={landscapeIndication.targetExplorer} />
+          {landscapeIndication.targetExplorer ? (
+            <TargetExplorerPanel
+              diseaseName={landscapeIndication.name}
+              explorer={landscapeIndication.targetExplorer}
+            />
+          ) : (
+            <div className="border border-slate-200 bg-white">
+              <InlineIndicationDetail
+                indication={landscapeIndication}
+                parasiteFilter="All autoimmune diseases"
+                showExploreLink={false}
+              />
+            </div>
+          )}
         </div>
       </main>
     );
@@ -266,7 +188,6 @@ export function WhiteSpaceExplorer() {
 
         <IndicationsTable
           indications={visibleIndications}
-          onOpenTargetLandscape={setLandscapeId}
           parasiteFilter="All autoimmune diseases"
           selectedId={selectedId}
           onSelect={setSelectedId}
