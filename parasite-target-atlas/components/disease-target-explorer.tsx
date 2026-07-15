@@ -38,6 +38,8 @@ export type TargetExplorerData = {
   targetCount: number;
   targetsWithViralHits: number;
   viralMoleculeHitCount: number;
+  sourceDiseaseName?: string;
+  sourceMapping?: "direct" | "proxy";
   description?: string;
 };
 
@@ -109,7 +111,9 @@ export function TargetExplorerPanel({
             </Link>
             <div className="min-w-0">
               <div className="text-[9px] font-black uppercase tracking-[0.22em] opacity-65">
-                Target Index
+                {explorer.sourceMapping === "proxy"
+                  ? `Parent-disease proxy · ${explorer.sourceDiseaseName}`
+                  : "Target Index"}
               </div>
               <h2 className="truncate text-[clamp(1.6rem,2.4vw,2.5rem)] font-black leading-[0.9] tracking-[-0.02em] [font-family:'Big_Shoulders_Display',Impact,sans-serif]">
                 {diseaseName ?? "Disease landscape"}
